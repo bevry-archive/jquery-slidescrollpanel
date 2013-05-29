@@ -1,0 +1,41 @@
+{
+	"name": "jquery-slidescrollpanel",
+	"version": "1.0.0",
+	"description": "Create sliding scroll panels that are slid-in by touch, trackpad and scrolling",
+	"homepage": "https://github.com/bevry/jquery-slidescrollpanel",
+	"keywords": [
+		"jquery","scroll","scrolling","slide","sliding","slideable","touch","scrollwheel","trackpad","dom","panel"
+	],
+	"author": "Bevry Pty Ltd <us@bevry.me> (http://bevry.me)",
+	"maintainers": [
+		"Benjamin Lupton <b@lupton.cc> (https://github.com/balupton)"
+	],
+	"contributors": [
+		"Benjamin Lupton <b@lupton.cc> (https://github.com/balupton)"
+	],
+	"bugs": {
+		"url": "https://github.com/bevry/jquery-slidescrollpanel/issues"
+	},
+	"repository" : {
+		"type": "git",
+		"url": "https://github.com/bevry/jquery-slidescrollpanel.git"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"docpad": "6.x",
+		"docpad-plugin-umd": "2.x",
+		"docpad-plugin-coffeescript": "2.x",
+		"docpad-plugin-eco": "2.x",
+		"docpad-plugin-highlightjs": "2.x",
+		"docpad-plugin-livereload": "2.x",
+		"docpad-plugin-ghpages": "2.x",
+		"docpad-plugin-cleanurls": "2.x"
+	},
+	"directories": {
+		"lib": "./out/lib"
+	},
+	"scripts": {
+		"test": "./node_modules/.bin/cake test"
+	},
+	"main": "./out/lib/jquery-slidescrollpanel.js"
+}
