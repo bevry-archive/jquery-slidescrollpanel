@@ -48,23 +48,6 @@
 		</div>
 	</div>
 
-	<div class="section about" id="about">
-		<h2>About</h2>
-
-		<p>
-			<strong><%= @package.title %></strong> is a great way to <%= @package.description.substring(0,1).toLowerCase()+@package.description.substring(1) %>
-		</p>
-
-		<ul class="features">
-			<li><strong>Extremely simple to use:</strong> just call <code>$('#element).ScrollTo()</code> and your user will be smoothly scrolled to that element!</li>
-			<li><strong>Only 1KB in size!</strong> Making it the smallest ScrollTo plugin and won't slow you down.</li>
-			<li><strong>Supports all the elements you can throw at it!</strong> Even those ones in modals and scrollable areas! So you can now feel at ease knowing your user will always be scrolled to that correct place which you intended.</li>
-			<li><strong>It's even easy customise and work with!</strong> You can specify such options as <code>duration</code>, <code>easing</code>, and <code>callback</code> on your ScrollTo call.</li>
-		</ul>
-
-		<p>Enough talk, let's see it in action!</p>
-	</div>
-
 	<%- @content %>
 
 	<div class="section install" id="install">

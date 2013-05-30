@@ -1,0 +1,62 @@
+---
+layout: default
+urls: ['/demo/']
+---
+
+<div class="section about" id="about">
+	<h2>About</h2>
+	<p>
+		<strong><%= @package.title %></strong> is a great way to <%= @package.description.substring(0,1).toLowerCase()+@package.description.substring(1) %>
+	</p>
+</div>
+
+<div class="section using" id="using">
+	<h2>Using</h2>
+
+	<div class="demo">
+
+		<div class="demo-box">
+			<% for direction in ['right','left','top','bottom']: %>
+				<button class="demo-box-<%= direction %>-button">
+					slide in from <%= direction %>
+				</button>
+				<div class="demo-box-<%= direction %>-panel">
+					<div>
+						Hello from the <%= direction %> side! Scroll or swipe me away!
+					</div>
+
+					<div>
+						Initialize me with:
+						<pre><code class="language-js">
+							$('#yourPanel').scrollSlidePanel({direction:'<%= direction %>'})
+						</code></pre>
+					</div>
+
+					<div>
+						Show me with:
+						<pre><code class="language-js">
+							$('#yourPanel').data('slidescrollpanel').showPanel()
+						</code></pre>
+					</div>
+
+					<div>
+						Hide me with:
+						<pre><code class="language-js">
+							$('#yourPanel').data('slidescrollpanel').hidePanel()
+						</code></pre>
+					</div>
+				</div>
+				<script>
+					$(function(){
+						var $panel = $('.demo-box-<%= direction %>-panel').slideScrollPanel({
+							direction: '<%= direction %>'
+						});
+						var $button = $('.demo-box-<%= direction %>-button').click(function(){
+							$panel.data('slidescrollpanel').showPanel();
+						});
+					});
+				</script>
+			<% end %>
+		</div>
+	</div>
+</div>

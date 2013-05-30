@@ -1,5 +1,13 @@
+// Import
+@import 'nib'
+
+
 // ------------------------------------
 // Body
+
+*
+	// Make paddings be included within the width
+	box-sizing: border-box
 
 body
 	padding-left: 0px
@@ -70,12 +78,12 @@ em
 p
 .section div
 	padding: 0px
-	margin:1em 0
+	margin: 1em 0
 
 .section.install
 	p
 	div
-		margin:0.2em 0 1em
+		margin: 0.2em 0 1em
 
 
 // ------------------------------------
@@ -96,11 +104,11 @@ label
 	overflow: auto
 
 .cols .one
-	width:49%
+	width: 49%
 	float: left
 
 .cols .two
-	width:49%
+	width: 49%
 	float: right
 
 
@@ -110,10 +118,10 @@ label
 a
 	&.help
 		text-decoration: none
-		border-bottom:1px dotted #00E
+		border-bottom: 1px dotted #00E
 
 	&:visited
-		border-bottom:1px dotted #551A8B
+		border-bottom: 1px dotted #551A8B
 
 
 // ------------------------------------
@@ -121,16 +129,17 @@ a
 
 .section
 	border-top: 1px solid #BBB
-	margin-top: 15px
+	margin-top: 2em
 	margin-left: 5%
 	margin-right: 5%
 	padding: 5px
+	padding-top: 0px
 	padding-bottom: 0px
 	background-color: white
 
 	ul
 		list-style: none
-		margin-top: 5px
+		margin-top: 1em
 
 		li
 			display: inline
@@ -138,7 +147,7 @@ a
 		&.features
 			display: block
 			list-style: disc
-			margin-left:2em
+			margin-left: 2em
 
 			li
 				list-style: disc

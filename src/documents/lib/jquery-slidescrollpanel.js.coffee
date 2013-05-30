@@ -2,6 +2,9 @@
 umd: true
 ---
 
+# Import
+jQuery = $ = window.jQuery or require('jquery')
+
 ###
 TODO
 - Add styling
@@ -10,57 +13,185 @@ TODO
 - Add tests
 ###
 
-# Import
-jQuery = $ = window.jQuery or require('jquery')
-
 # Attach
 $.SlideScrollPanel = class SlideScrollPanel
 	$el: null
 	interval: null
+	direction: null
 
 	# Construct our Slide Scroll Panel
-	constructor: (@$el) ->
-		@$el
-			# Remove any old events to avoid duplicates
+	constructor: (opts) ->
+		# Apply
+		$content = @$el = opts.$el
+		@direction = opts.direction or 'right'
+
+		# Wrapper
+		$wrap = $("<div class=\"slidescrollpanel-wrap slidescrollpanel-direction-#{@direction}\"/>").hide()
+
+		# Style
+		$wrap.add($content).css(
+			margin: 0
+			padding: 0
+		)
+		$wrap.css(
+			position: 'absolute'
+			top: 0
+			left: 0
+			overflow: 'auto'
+			'z-index': 100
+		)
+		$content.css(
+			display: 'inline-block'
+		)
+
+		# Content
+		$content
+			# Attach us
+			.data('slidescrollpanel', @)
+			.addClass('slidescrollpanel-content')
+
+			# Wrap
+			.wrap($wrap)
+
+
+		# Listeners
+		@addListeners()
+
+		# Chain
+		@
+
+	# Remove Listeners
+	removeListeners: =>
+		@$getWrapper()
 			.off('mouseleave', @leavePanelHelper)
 			.off('touchend', @leavePanelHelper)
-			.off('showSlideScrollPanel', @showPanel)
-			.off('hideSlideScrollPanel', @hidePanel)
+		$(window)
+			.off('resize', @resize)
+		@
 
-			# Add our new events
+	# Add Listeners
+	addListeners: =>
+		@removeListeners()
+		@$getWrapper()
 			.on('mouseleave', @leavePanelHelper)
 			.on('touchend', @leavePanelHelper)
-			.on('showSlideScrollPanel', @showPanel)
-			.on('hideSlideScrollPanel', @hidePanel)
+		$(window)
+			.on('resize', @resize)
 		@
 
 	# Is touch device?
 	# http://stackoverflow.com/a/4819886/130638
 	isTouchDevice: ->
-		return `
-			!!('ontouchstart' in window) // works on most browsers
-			|| !!('onmsgesturechange' in window); // works on ie10
-			`
+		return `!!('ontouchstart' in window) || !!('onmsgesturechange' in window)`
+
+	# Get Margin
+	marginMap:
+		right: 'left'
+		left: 'right'
+		top: 'bottom'
+		bottom: 'top'
+	getMargin: =>
+		margin = @marginMap[@direction]
+		return margin
+
+	# Get Axis
+	axisMap:
+		right: 'scrollLeft'
+		left: 'scrollLeft'
+		top: 'scrollTop'
+		bottom: 'scrollTop'
+	getAxis: =>
+		axis = @axisMap[@direction]
+		return axis
+
+	# Get Property
+	propertyMap:
+		right: 'width'
+		left: 'width'
+		top: 'height'
+		bottom: 'height'
+	getProperty: =>
+		property = @propertyMap[@direction]
+		return property
+
+	# Get Inverse
+	inverseMap:
+		right: false
+		left: true
+		top: true
+		bottom: false
+	getInverse: =>
+		inverse = @inverseMap[@direction]
+		return inverse
+
+	# Get Size
+	getSize: =>
+		property = @getProperty()
+		$wrap = @$getWrapper()
+		size = $wrap[property]()
+		return size
+
+	# Get Offset
+	getOffset: =>
+		axis = @getAxis()
+		$wrap = @$getWrapper()
+		offset = $wrap.prop(axis)
+		return offset
+
+	# Get Show Props
+	getShowProps: =>
+		axis = @getAxis()
+		opts = {}
+
+		if @getInverse()
+			opts[axis] = 0
+		else
+			opts[axis] = @getSize()
+
+		return opts
+
+	# Get Hide Props
+	getHideProps: =>
+		axis = @getAxis()
+		opts = {}
+
+		if @getInverse()
+			opts[axis] = @getSize()
+		else
+			opts[axis] = 0
+
+		return opts
 
 	# Get $wrap
-	$getWrapper: ->
-		$wrap = @$el.find('.slidescrollpanel-panel-wrap')
+	$getWrapper: =>
+		$wrap = @$el.parent()
 		return $wrap
 
 	# Get $content
-	$getContent: ->
-		$content = @$el.find('.slidescrollpanel-panel-content')
+	$getContent: =>
+		$content = @$el
 		return $content
 
-	# Is ACtive
-	isActive: ->
-		active = @$el.hasClass('slidescrollpanel-active')
-		return active
+	# Is Active
+	active: (active) =>
+		$wrap = @$getWrapper()
+		if active is true
+			$wrap.addClass('slidescrollpanel-active').show()
+			return @
+		else if active is false
+			$wrap.removeClass('slidescrollpanel-active').hide()
+			return @
+		else
+			active = $wrap.hasClass('slidescrollpanel-active')
+			return active
 
 	# Destroy
 	destroy: =>
 		# Remove the interval to stop it firing
 		@clearInterval()
+
+		# Stop listening
+		@removeListeners()
 
 		# Chain
 		@
@@ -68,7 +199,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Add Interval
 	# Necessary for non-touch devices as they do not have touch events
 	# TODO: why? we have mouseleave, isn't that good enough?
-	addInterval: ->
+	addInterval: =>
 		# If we are a touch device, then we do not need the helper as we have touch events instead!
 		return  if @isTouchDevice()
 
@@ -80,64 +211,95 @@ $.SlideScrollPanel = class SlideScrollPanel
 		@
 
 	# Clear Interval
-	clearInterval: ->
+	clearInterval: =>
 		if @interval?
 			clearInterval(@interval)
 			@interval = null
+		@
+
+	# Resize
+	resize: =>
+		$wrap = @$getWrapper()
+		$content = @$getContent()
+		$container = $wrap.parent()
+		$wrap.add($content).css(
+			width: $container.width()
+			height: $container.height()
+		)
+		$content.css('margin-'+@getMargin(), @getSize())
 		@
 
 	# Show Panel
 	# next()
 	showPanel: (next) =>
 		@clearInterval()
-		$content = @$getContent()
-		width = $content.width()
-		$content.addClass('active')
-		$content.stop(true,false).animate {'scrollLeft':width}, 400, =>
+
+		$wrap = @$getWrapper()
+
+		if @active() is false
+			@resize()
+			$wrap.css(opacity:0)
+			@active(true)  # must be before prop set
+			$wrap.prop(@getHideProps()).css(opacity:1)
+
+		$wrap.stop(true,false).animate @getShowProps(), 400, =>
 			$(window).trigger('resize')
 			@addInterval()
 			return next?()
+
+		# Chain
 		@
 
 	# Hide Panel
 	# next()
 	hidePanel: (next) =>
 		@clearInterval()
-		$content = @$getContent()
-		$content.stop(true,false).animate {'scrollLeft':0}, 400, =>
-			$content.removeClass('active')
+		$wrap = @$getWrapper()
+		$wrap.stop(true,false).animate  @getHideProps(), 400, =>
+			@active(false)
 			$(window).trigger('resize')
 			return next?()
+
+		# Chain
 		@
 
 	# Leave Panel Helper
 	# Used for the desktop interval
 	leavePanelHelper: =>
-		if @isActive()
-			$content = @$getContent()
-			offset = $content.prop('scrollLeft')
-			width = $content.width()
+		if @active()
+			offset = @getOffset()
+			size =  @getSize()
 
-			# Full
-			if offset is width
+			if @getInverse()
+				shown = offset is 0
+				over = offset < size/2
+			else
+				shown = offset is size
+				over = offset > size/2
+
+			# Same
+			if shown
 				# ignore
 
 			# Still active
-			else if offset > width/2
-				@showPanel => @$el.trigger('inSlideScrollPanel')
+			else if over
+				@showPanel => @$el.trigger('slidescrollpanelin')
 
 			# No longer active
 			else
-				@hidePanel => @$el.trigger('outSlideScrollPanel')
+				@hidePanel => @$el.trigger('slidescrollpanelout')
+
+		# Chain
 		@
 
 # jQuery Chain Method
-$.fn.slideScrollPanel = ->
+$.fn.slideScrollPanel = (opts={}) ->
 	# Prepare
 	$el = $(@)
 
 	# Attach Slide Scroll Panel
-	slideScrollPanel = new SlideScrollPanel($el)
+	opts.$el = $el
+	slideScrollPanel = new SlideScrollPanel(opts)
 
 	# Chain
 	return $el
