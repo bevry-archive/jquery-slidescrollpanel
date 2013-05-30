@@ -1,9 +1,9 @@
 {
 	"name": "jquery-slidescrollpanel",
-	"title": "jQuery Slide Scroll Panel",
 	"version": "1.0.0",
-	"tagline": "Slide panels in by touch and scrolling",
 	"description": "Create sliding scroll panels that slide in by touch, trackpad and scrolling",
+	"title": "jQuery Slide Scroll Panel",
+	"tagline": "Slide panels in by touch and scrolling",
 	"homepage": "http://bevry.github.com/jquery-slidescrollpanel",
 	"project":  "https://github.com/bevry/jquery-slidescrollpanel",
 	"download": "https://github.com/bevry/jquery-slidescrollpanel/zipball/gh-pages",
