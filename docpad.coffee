@@ -1,6 +1,14 @@
 module.exports =
 	templateData:
-		package: require('./package.json')
+		package: packageData = require('./package.json')
+		site:
+			url: packageData.homepage
+			services:
+				twitterTweetButton: "balupton"
+				twitterFollowButton: "balupton"
+				githubFollowButton: "balupton"
+				gauges: '51a70d55613f5d041c000012'
+				googleAnalytics: 'UA-4446117-1'
 	plugins:
 		highlightjs:
 			removeIndentation: true

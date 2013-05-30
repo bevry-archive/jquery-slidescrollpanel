@@ -37,6 +37,7 @@
 		"docpad-plugin-stylus": "2.x",
 		"docpad-plugin-highlightjs": "2.x",
 		"docpad-plugin-livereload": "2.x",
+		"docpad-plugin-services": "2.x",
 		"docpad-plugin-ghpages": "2.x",
 		"docpad-plugin-cleanurls": "2.x"
 	},
