@@ -1,8 +1,12 @@
 {
 	"name": "jquery-slidescrollpanel",
+	"title": "jQuery Slide Scroll Panel",
 	"version": "1.0.0",
-	"description": "Create sliding scroll panels that are slid-in by touch, trackpad and scrolling",
-	"homepage": "https://github.com/bevry/jquery-slidescrollpanel",
+	"tagline": "Slide panels in by touch and scrolling",
+	"description": "Create sliding scroll panels that slide in by touch, trackpad and scrolling",
+	"homepage": "http://bevry.github.com/jquery-slidescrollpanel",
+	"project":  "https://github.com/bevry/jquery-slidescrollpanel",
+	"download": "https://github.com/bevry/jquery-slidescrollpanel/zipball/gh-pages",
 	"keywords": [
 		"jquery","scroll","scrolling","slide","sliding","slideable","touch","scrollwheel","trackpad","dom","panel"
 	],
@@ -16,6 +20,10 @@
 	"bugs": {
 		"url": "https://github.com/bevry/jquery-slidescrollpanel/issues"
 	},
+	"license" : {
+		"name": "MIT",
+		"url": "http://creativecommons.org/licenses/MIT/"
+	},
 	"repository" : {
 		"type": "git",
 		"url": "https://github.com/bevry/jquery-slidescrollpanel.git"
@@ -26,6 +34,7 @@
 		"docpad-plugin-umd": "2.x",
 		"docpad-plugin-coffeescript": "2.x",
 		"docpad-plugin-eco": "2.x",
+		"docpad-plugin-stylus": "2.x",
 		"docpad-plugin-highlightjs": "2.x",
 		"docpad-plugin-livereload": "2.x",
 		"docpad-plugin-ghpages": "2.x",
