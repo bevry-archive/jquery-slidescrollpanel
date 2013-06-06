@@ -33,13 +33,10 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Should we auto set the wrap's height?
 		autoWrapHeight: true
 
-		# Styles to apply to both the panel and the wrap
-		styles:
-			margin: 0
-			padding: 0
-
 		# Styles to apply to the wrap
 		wrapStyles:
+			margin: 0
+			padding: 0
 			position: 'absolute'
 			top: 0
 			left: 0
@@ -48,6 +45,8 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# Styles to apply to the content
 		contentStyles:
+			margin: 0
+			padding: 0
 			width: '100%'
 			display: 'inline-block'
 
@@ -63,13 +62,11 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$content = @config.$el
 
 		# Wrapper
-		if @config.$wrap isnt 'parent'
-			$wrap = @config.$wrap or $("<div/>")
+		unless @config.$wrap
+			$wrap = $("<div/>")
 			$content.wrap($wrap)
-		$wrap = $content.parent()
-
-		# Both
-		$wrap.add($content).css(@config.styles)
+			@config.$wrap = $wrap = $content.parent()
+		@config.$wrap = $wrap
 
 		# Wrap
 		$wrap
@@ -92,6 +89,17 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# Listeners
 		@addListeners()
+
+		# Chain
+		@
+
+	# Destroy
+	destroy: =>
+		# Remove the interval to stop it firing
+		@clearInterval()
+
+		# Stop listening
+		@removeListeners()
 
 		# Chain
 		@
@@ -204,7 +212,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Get $wrap
 	$getWrapper: =>
-		$wrap = @config.$el.parent()
+		$wrap = @config.$wrap
 		return $wrap
 
 	# Get $content
@@ -227,17 +235,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 		else
 			active = $wrap.hasClass('slidescrollpanel-active')
 			return active
-
-	# Destroy
-	destroy: =>
-		# Remove the interval to stop it firing
-		@clearInterval()
-
-		# Stop listening
-		@removeListeners()
-
-		# Chain
-		@
 
 	# Add Interval
 	# Necessary for non-touch devices as they do not have touch events

@@ -13,6 +13,8 @@ urls: ['/demo/']
 <div class="section using" id="using">
 	<h2>Using</h2>
 
+	<h3>Demo</h3>
+	<p>Click the buttons to see <%= @package.title %> in action!</p>
 	<div class="demo">
 
 		<div class="demo-box">
@@ -59,10 +61,8 @@ urls: ['/demo/']
 			<% end %>
 		</div>
 	</div>
-</div>
 
-<div class="section customize" id="customize">
-	<h2>Customize</h2>
+	<h3>Configuration</h3>
 	<p>The following configuration is available when creating your slide scroll panel with: <code>$('#yourPanel').scrollSlidePanel(config)</code></p>
 	<pre><code class="language-coffeescript">
 		# Direction that our panel should slide in from
@@ -84,22 +84,26 @@ urls: ['/demo/']
 		# Should we auto set the wrap's height?
 		autoWrapHeight: true
 
-		# Styles to apply to both the panel and the wrap
-		styles:
+		# Styles to apply to the panel
+		contentStyles:
 			margin: 0
 			padding: 0
+			width: '100%'
+			display: 'inline-block'
 
 		# Styles to apply to the wrap
 		wrapStyles:
+			margin: 0
+			padding: 0
 			position: 'absolute'
 			top: 0
 			left: 0
 			overflow: 'auto'
 			'z-index': 100
 
-		# Styles to apply to the content
-		contentStyles:
-			width: '100%'
-			display: 'inline-block'
 	</code></pre>
+
+	<h3>CSS Classes</h3>
+	<p>The CSS class <code>slidescrollpanel-wrap</code> is added to the wrapper</p>
+	<p>The CSS classes <code>slidescrollpanel-content</code> and <code>slidescrollpanel-direction-THEDIRECTION</code> are added to the panel</p>
 </div>
