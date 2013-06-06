@@ -69,7 +69,7 @@ urls: ['/demo/']
 		direction: 'right'
 
 		# jQuery Element our panel is wrapped in
-		# Defaults to the panel element's parent element
+		# Defaults to a new div
 		$wrap: null
 
 		# Should we auto set the panel's width?
