@@ -60,3 +60,46 @@ urls: ['/demo/']
 		</div>
 	</div>
 </div>
+
+<div class="section customize" id="customize">
+	<h2>Customize</h2>
+	<p>The following configuration is available when creating your slide scroll panel with: <code>$('#yourPanel').scrollSlidePanel(config)</code></p>
+	<pre><code class="language-coffeescript">
+		# Direction that our panel should slide in from
+		direction: 'right'
+
+		# jQuery Element our panel is wrapped in
+		# Defaults to the panel element's parent element
+		$wrap: null
+
+		# Should we auto set the panel's width?
+		autoContentWidth: true
+
+		# Should we auto set the panel's height?
+		autoContentHeight: true
+
+		# Should we auto set the wrap's width?
+		autoWrapWidth: true
+
+		# Should we auto set the wrap's height?
+		autoWrapHeight: true
+
+		# Styles to apply to both the panel and the wrap
+		styles:
+			margin: 0
+			padding: 0
+
+		# Styles to apply to the wrap
+		wrapStyles:
+			position: 'absolute'
+			top: 0
+			left: 0
+			overflow: 'auto'
+			'z-index': 100
+
+		# Styles to apply to the content
+		contentStyles:
+			width: '100%'
+			display: 'inline-block'
+	</code></pre>
+</div>

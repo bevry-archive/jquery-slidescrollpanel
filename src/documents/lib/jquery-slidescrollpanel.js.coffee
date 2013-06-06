@@ -5,54 +5,90 @@ umd: true
 # Import
 jQuery = $ = window.jQuery or require('jquery')
 
-###
-TODO
-- Add styling
-- Add demo
-- Add directions
-- Add tests
-###
-
 # Attach
 $.SlideScrollPanel = class SlideScrollPanel
-	$el: null
+	# Desktop interval
 	interval: null
-	direction: null
 
-	# Construct our Slide Scroll Panel
-	constructor: (opts) ->
-		# Apply
-		$content = @$el = opts.$el
-		@direction = opts.direction or 'right'
+	# Configuration
+	config:
+		# jQuery Element for our panel
+		$el: null
 
-		# Wrapper
-		$wrap = $("<div class=\"slidescrollpanel-wrap slidescrollpanel-direction-#{@direction}\"/>").hide()
+		# jQuery Element our panel is wrapped in
+		$wrap: null
 
-		# Style
-		$wrap.add($content).css(
+		# Direction that our panel should slide in from
+		direction: 'right'
+
+		# Should we auto set the panel's width?
+		autoContentWidth: true
+
+		# Should we auto set the panel's height?
+		autoContentHeight: true
+
+		# Should we auto set the wrap's width?
+		autoWrapWidth: true
+
+		# Should we auto set the wrap's height?
+		autoWrapHeight: true
+
+		# Styles to apply to both the panel and the wrap
+		styles:
 			margin: 0
 			padding: 0
-		)
-		$wrap.css(
+
+		# Styles to apply to the wrap
+		wrapStyles:
 			position: 'absolute'
 			top: 0
 			left: 0
 			overflow: 'auto'
 			'z-index': 100
-		)
-		$content.css(
+
+		# Styles to apply to the content
+		contentStyles:
+			width: '100%'
 			display: 'inline-block'
-		)
+
+	# Construct our Slide Scroll Panel
+	# Options are shallow merged (meaning styles will be replaced, rather than combined)
+	constructor: (opts={}) ->
+		# Dereference
+		@config = JSON.parse JSON.stringify @config
+		for own key,value of opts
+			@config[key] = value
+
+		# Apply
+		$content = @config.$el
+
+		# Wrapper
+		if @config.$wrap isnt 'parent'
+			$wrap = @config.$wrap or $("<div/>")
+			$content.wrap($wrap)
+		$wrap = $content.parent()
+
+		# Both
+		$wrap.add($content).css(@config.styles)
+
+		# Wrap
+		$wrap
+			# Attach
+			.hide()
+			.data('slidescrollpanel', @)
+			.addClass("slidescrollpanel-wrap")
+
+			# Style
+			.css(@config.wrapStyles)
 
 		# Content
 		$content
-			# Attach us
+			# Attach
 			.data('slidescrollpanel', @)
-			.addClass('slidescrollpanel-content')
+			.addClass("slidescrollpanel-content slidescrollpanel-direction-#{@getDirection()}")
 
-			# Wrap
-			.wrap($wrap)
-
+			# Style
+			.css(@config.contentStyles)
 
 		# Listeners
 		@addListeners()
@@ -84,6 +120,10 @@ $.SlideScrollPanel = class SlideScrollPanel
 	isTouchDevice: ->
 		return `!!('ontouchstart' in window) || !!('onmsgesturechange' in window)`
 
+	# Get Direction
+	getDirection: ->
+		return @config.direction
+
 	# Get Margin
 	marginMap:
 		right: 'left'
@@ -91,7 +131,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 		top: 'bottom'
 		bottom: 'top'
 	getMargin: =>
-		margin = @marginMap[@direction]
+		margin = @marginMap[@getDirection()]
 		return margin
 
 	# Get Axis
@@ -101,7 +141,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 		top: 'scrollTop'
 		bottom: 'scrollTop'
 	getAxis: =>
-		axis = @axisMap[@direction]
+		axis = @axisMap[@getDirection()]
 		return axis
 
 	# Get Property
@@ -111,7 +151,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 		top: 'height'
 		bottom: 'height'
 	getProperty: =>
-		property = @propertyMap[@direction]
+		property = @propertyMap[@getDirection()]
 		return property
 
 	# Get Inverse
@@ -121,7 +161,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 		top: true
 		bottom: false
 	getInverse: =>
-		inverse = @inverseMap[@direction]
+		inverse = @inverseMap[@getDirection()]
 		return inverse
 
 	# Get Size
@@ -164,13 +204,16 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Get $wrap
 	$getWrapper: =>
-		$wrap = @$el.parent()
+		$wrap = @config.$el.parent()
 		return $wrap
 
 	# Get $content
 	$getContent: =>
-		$content = @$el
+		$content = @config.$el
 		return $content
+
+	# Get $el
+	$getEl: => @$getContent()
 
 	# Is Active
 	active: (active) =>
@@ -222,11 +265,16 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$wrap = @$getWrapper()
 		$content = @$getContent()
 		$container = $wrap.parent()
-		$wrap.add($content).css(
-			width: $container.width()
-			height: $container.height()
-		)
+		width = $container.width()
+		height = $container.height()
+
+		$content.css({width})   if @config.autoContentWidth
+		$content.css({height})  if @config.autoContentHeight
+		$wrap.css({width})      if @config.autoWrapWidth
+		$wrap.css({height})     if @config.autoWrapHeight
+
 		$content.css('margin-'+@getMargin(), @getSize())
+
 		@
 
 	# Show Panel
@@ -283,11 +331,11 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 			# Still active
 			else if over
-				@showPanel => @$el.trigger('slidescrollpanelin')
+				@showPanel => @$getEl().trigger('slidescrollpanelin')
 
 			# No longer active
 			else
-				@hidePanel => @$el.trigger('slidescrollpanelout')
+				@hidePanel => @$getEl().trigger('slidescrollpanelout')
 
 		# Chain
 		@
