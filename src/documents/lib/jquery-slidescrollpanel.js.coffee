@@ -62,11 +62,12 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$content = @config.$el
 
 		# Wrapper
-		unless @config.$wrap
+		if @config.$wrap
+			$wrap = @config.$wrap
+		else
 			$wrap = $("<div/>")
 			$content.wrap($wrap)
 			@config.$wrap = $wrap = $content.parent()
-		@config.$wrap = $wrap
 
 		# Wrap
 		$wrap
