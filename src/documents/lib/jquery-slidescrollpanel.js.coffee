@@ -106,8 +106,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 			@$getWrapper()
 				.off('touchstart', @enterPanelHelper)
 				.off('touchend',   @leavePanelHelper)
-			@$getContent()
-				.off('touchstart', @enterPanelHelper)
 		else
 			@$getContent()
 				.off('mouseenter', @enterPanelHelper)
@@ -125,8 +123,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 			@$getWrapper()
 				.on('touchstart', @enterPanelHelper)
 				.on('touchend',   @leavePanelHelper)
-			@$getContent()
-				.on('touchstart', @enterPanelHelper)
 		else
 			@$getContent()
 				.on('mouseenter', @enterPanelHelper)
@@ -142,87 +138,209 @@ $.SlideScrollPanel = class SlideScrollPanel
 	isTouchDevice: ->
 		return `!!('ontouchstart' in window) || !!('onmsgesturechange' in window)`
 
+
+	# =================================
+	# Getters
+
 	# Get Direction
 	getDirection: ->
 		return @config.direction
 
-	# Get Margin
-	marginMap:
-		right: 'left'
-		left: 'right'
-		top: 'bottom'
-		bottom: 'top'
-	getMargin: =>
-		margin = @marginMap[@getDirection()]
-		return margin
 
-	# Get Axis
-	axisMap:
-		right: 'scrollLeft'
-		left: 'scrollLeft'
-		top: 'scrollTop'
-		bottom: 'scrollTop'
-	getAxis: =>
-		axis = @axisMap[@getDirection()]
-		return axis
+	# ---------------------------------
+	# Inverse
 
-	# Get Property
-	propertyMap:
-		right: 'width'
-		left: 'width'
-		top: 'height'
-		bottom: 'height'
-	getProperty: =>
-		property = @propertyMap[@getDirection()]
-		return property
-
-	# Get Inverse
+	# Map
 	inverseMap:
 		right: false
 		left: true
 		top: true
 		bottom: false
-	getInverse: =>
-		inverse = @inverseMap[@getDirection()]
+
+	# Get Inverse
+	isInverse: =>
+		direction = @getDirection()
+		inverse = @inverseMap[direction]
 		return inverse
 
-	# Get Size
-	getSize: =>
-		property = @getProperty()
-		$wrap = @$getWrapper()
-		size = $wrap[property]()
-		return size
 
-	# Get Offset
-	getOffset: =>
-		axis = @getAxis()
-		$wrap = @$getWrapper()
-		offset = $wrap.prop(axis)
-		return offset
+	# ---------------------------------
+	# Size
 
-	# Get Show Props
-	getShowProps: =>
-		axis = @getAxis()
+	# Size Property Map
+	sizePropertyMap:
+		right: 'width'
+		left: 'width'
+		top: 'height'
+		bottom: 'height'
+
+	# Get Size Property
+	getSizeProperty: =>
+		direction = @getDirection()
+		sizeProperty = @sizePropertyMap[direction]
+		return sizeProperty
+
+	# Get Size Value
+	getSizeValue:  =>
+		sizeProperty = @getSizeProperty()
+		sizeValue = @$getWrapper()[sizeProperty]()
+		return sizeValue
+
+
+	# ---------------------------------
+	# Margin
+
+	# Margin Property Map
+	marginPropertyMap:
+		right: 'margin-left'
+		left: 'margin-right'
+		top: 'margin-bottom'
+		bottom: 'margin-top'
+
+	# Get Margin Property
+	getMarginProperty: =>
+		direction = @getDirection()
+		marginProperty = @marginPropertyMap[direction]
+		return marginProperty
+
+	# Get Margin
+	getMarginValue: =>
+		marginProperty = @getMarginProperty()
+		margin = @$getContent().css(marginProperty)
+		return marginValue
+
+	# Get Desired Margin Value
+	getDesiredMarginValue: =>
+		return @getSizeValue()
+
+	# Get Margin Styles
+	getMarginStyles: =>
 		opts = {}
-
-		if @getInverse()
-			opts[axis] = 0
-		else
-			opts[axis] = @getSize()
-
+		opts[@getMarginProperty()] = @getMarginValue()
 		return opts
 
-	# Get Hide Props
-	getHideProps: =>
-		axis = @getAxis()
+	# Get Desired Margin Styles
+	getDesiredMarginStyles: =>
 		opts = {}
-
-		if @getInverse()
-			opts[axis] = @getSize()
-		else
-			opts[axis] = 0
-
+		opts[@getMarginProperty()] = @getDesiredMarginValue()
 		return opts
+
+
+	# ---------------------------------
+	# Position
+
+	# Position Property Map
+	positionPropertyMap:
+		right: 'left'
+		left: 'left'
+		top: 'top'
+		bottom: 'top'
+
+	# Get Position Property
+	getPositionProperty: =>
+		direction = @getDirection()
+		positionProperty = @positionPropertyMap[direction]
+		return positionProperty
+
+	# Get Position Value
+	getPositionValue: =>
+		positionProperty = @getPositionProperty()
+		positionValue = @$getWrapper().css(positionProperty)
+		return positionValue
+
+	# Get Show Position Value
+	getShowPositionValue: =>
+		positionValue = '0px'
+		return positionValue
+
+	# Get Hide Position Value
+	getHidePositionValue: =>
+		positionValue = @getSizeValue()+'px'
+		return positionValue
+
+	# Get Desired Position Value
+	getDesiredPositionValue: =>
+		positionValue = (@getShowAxisValue()-@getAxisValue())+'px'
+		return positionValue
+
+	# Get Position Styles
+	getPositionStyles: =>
+		opts = {}
+		opts[@getPositionProperty()] = @getPositionValue()
+		return opts
+
+	# Get Desired Position Styles
+	getDesiredPositionStyles: =>
+		opts = {}
+		opts[@getPositionProperty()] = (@getShowAxisValue()-@getAxisValue())+'px'
+		return opts
+
+	# Get Show Position Styles
+	getShowPositionStyles: =>
+		opts = {}
+		opts[@getPositionProperty()] = @getShowPositionValue()
+		return opts
+
+	# Get Hide Props Styles
+	getHidePositionStyles: =>
+		opts = {}
+		opts[@getPositionProperty()] = @getHidePositionValue()
+		return opts
+
+
+	# ---------------------------------
+	# Axis
+
+	# Axis Property Map
+	axisPropertyMap:
+		right: 'scrollLeft'
+		left: 'scrollLeft'
+		top: 'scrollTop'
+		bottom: 'scrollTop'
+
+	# Get Axis Property
+	getAxisProperty: =>
+		direction = @getDirection()
+		axisProperty = @axisPropertyMap[direction]
+		return axisProperty
+
+	# Get Axis
+	getAxisValue: =>
+		axisProperty = @getAxisProperty()
+		axisValue = @$getWrapper().prop(axisProperty)
+		return axisValue
+
+	# Get Show Axis Value
+	getShowAxisValue: =>
+		axisValue = if @isInverse() then 0 else @getSizeValue()
+		return axisValue
+
+	# Get Hide Axis Value
+	getHideAxisValue: =>
+		axisValue = if @isInverse() then @getSizeValue() else 0
+		return axisValue
+
+	# Get Axis Properties
+	getAxisProperties: =>
+		opts = {}
+		opts[@getAxisProperty()] = @getAxisValue()
+		return opts
+
+	# Get Show Axis Properties
+	getShowAxisProperties: =>
+		opts = {}
+		opts[@getAxisProperty()] = @getShowAxisValue()
+		return opts
+
+	# Get Hide Axis Properties
+	getHideAxisProperties: =>
+		opts = {}
+		opts[@getAxisProperty()] = @getHideAxisValue()
+		return opts
+
+
+	# ---------------------------------
+	# Elements
 
 	# Get $wrap
 	$getWrapper: =>
@@ -235,38 +353,47 @@ $.SlideScrollPanel = class SlideScrollPanel
 		return $content
 
 	# Get $el
-	$getEl: => @$getContent()
+	$getEl: =>
+		return @$getContent()
+
+
+	# =================================
+	# Methods
 
 	# Is Active
 	active: (active) =>
 		$wrap = @$getWrapper()
 		if active?
 			if active is true
-				$wrap.addClass('slidescrollpanel-active').show()
+				@enable()
 			else if active is false
-				$wrap.removeClass('slidescrollpanel-active').hide()
+				@disable()
 		else
 			active = $wrap.hasClass('slidescrollpanel-active')
 			return active
 
 		# Chain
-		return @
+		@
 
 	# Resize
 	resize: =>
+		# Fetch
 		$wrap = @$getWrapper()
 		$content = @$getContent()
 		$container = $wrap.parent()
 		width = $container.width()
 		height = $container.height()
 
+		# Update Sizes
 		$content.css({width})   if @config.autoContentWidth
 		$content.css({height})  if @config.autoContentHeight
 		$wrap.css({width})      if @config.autoWrapWidth
 		$wrap.css({height})     if @config.autoWrapHeight
 
-		$content.css('margin-'+@getMargin(), @getSize())
+		# Update Margin
+		$content.css(@getDesiredMarginStyles())
 
+		# Chain
 		@
 
 	# Show Panel
@@ -278,9 +405,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 			@resize()
 			$wrap.css(opacity:0)
 			@active(true)  # must be before prop set
-			$wrap.prop(@getHideProps()).css(opacity:1)
+			$wrap.prop(@getHideAxisProperties()).css(opacity:1)
 
-		$wrap.stop(true,false).animate @getShowProps(), 400, =>
+		$wrap.stop(true,false).animate @getShowAxisProperties(), 400, =>
 			$(window).trigger('resize')
 			return next?()
 
@@ -291,7 +418,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# next()
 	hidePanel: (next) =>
 		$wrap = @$getWrapper()
-		$wrap.stop(true,false).animate @getHideProps(), 400, =>
+		$wrap.stop(true,false).animate @getHideAxisProperties(), 400, =>
 			@active(false)
 			$(window).trigger('resize')
 			return next?()
@@ -301,13 +428,8 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Enter Panel Helper
 	enterPanelHelper: (event) =>
-		# Prepare
-		active = @active()
-
 		# Handle
-		console.log 'enter', active, event.currentTarget.className, event
-		if active
-			@enable(event)
+		@enable(event)
 
 		# Chain
 		@
@@ -318,23 +440,22 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$wrap = @$getWrapper()
 		$content = @$getContent()
 
-		# Disable
-		if @isTouchDevice()
-			currentOffset = $wrap.data('currentOffset')
-			if currentOffset
-				positionOffset =
-					left: 0
-				console.log 'enable:', JSON.stringify(currentOffset), JSON.stringify(positionOffset)
-				$wrap.css(positionOffset)
-				$wrap.prop(currentOffset)
-				$wrap.data('currentOffset', null)
-		else
-			$wrap.css('pointer-events': 'auto')
-
 		# Kill Timer
-		if @leavePanelHelperTimer
+		if @leavePanelHelperTimer?
 			clearTimeout(@leavePanelHelperTimer)
 			@leavePanelHelperTimer = null
+
+		# Class
+		$wrap.addClass('slidescrollpanel-active').show()
+
+		# Restore
+		cachedStyles = $wrap.data('cachedStyles')
+		cachedProperties = $wrap.data('cachedProperties')
+		if cachedProperties and cachedStyles
+			$wrap.css(cachedStyles)
+			$wrap.prop(cachedProperties)
+			$wrap.data('cachedStyles', null)
+			$wrap.data('cachedProperties', null)
 
 		# Chain
 		@
@@ -345,20 +466,19 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$wrap = @$getWrapper()
 		$content = @$getContent()
 
+		# Kill Timer
+		if @leavePanelHelperTimer?
+			clearTimeout(@leavePanelHelperTimer)
+			@leavePanelHelperTimer = null
+
 		# Disable
-		if @isTouchDevice()
-			showOffset = @getShowProps()
-			currentOffset =
-				scrollLeft: @getOffset()
-			positionOffset =
-				left: parseInt($content.offset().left, 10) - parseInt($wrap.offset().left, 10)
-			console.log 'disable:', currentOffset, positionOffset, showOffset
-			$wrap.css(positionOffset)
-			$wrap.prop(showOffset)
-			$wrap.data('currentOffset', currentOffset)
-		else
-			$wrap.css('pointer-events': 'none')
-			$content.css('pointer-events': 'auto')
+		$wrap.data('cachedProperties', @getAxisProperties())
+		$wrap.data('cachedStyles', @getPositionStyles())
+		$wrap.css(@getDesiredPositionStyles())
+		$wrap.prop(@getShowAxisProperties())
+
+		# Disable
+		$wrap.removeClass('slidescrollpanel-active')
 
 		# Chain
 		@
@@ -370,13 +490,13 @@ $.SlideScrollPanel = class SlideScrollPanel
 		active = @active()
 
 		# Handle
-		console.log 'leave', active, event.currentTarget.className, event
+		console.log 'leave', event, active, opts, @leavePanelHelperTimer
 		if active
 			if @isTouchDevice()
 				@disable()
-			else
+			else if event.type isnt 'scroll' or @leavePanelHelperTimer?  # don't allow initial enable scroll to trigger a hide
 				# Kill Timer
-				if @leavePanelHelperTimer
+				if @leavePanelHelperTimer?
 					clearTimeout(@leavePanelHelperTimer)
 					@leavePanelHelperTimer = null
 

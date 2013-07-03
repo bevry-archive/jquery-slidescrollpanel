@@ -19,7 +19,7 @@ urls: ['/demo/']
 
 		<div class="demo-box">
 			<% for direction in ['right','left','top','bottom']: %>
-				<button class="demo-box-<%= direction %>-button">
+				<button class="center-button demo-box-<%= direction %>-button-show">
 					slide in from <%= direction %>
 				</button>
 				<div class="demo-box-<%= direction %>-panel">
@@ -35,14 +35,14 @@ urls: ['/demo/']
 					</div>
 
 					<div>
-						Show me with:
+						<button class="demo-box-<%= direction %>-button-show">Show me</button> with:
 						<pre><code class="language-js">
 							$('#yourPanel').data('slidescrollpanel').showPanel()
 						</code></pre>
 					</div>
 
 					<div>
-						Hide me with:
+						<button class="demo-box-<%= direction %>-button-hide">Hide me</button> with:
 						<pre><code class="language-js">
 							$('#yourPanel').data('slidescrollpanel').hidePanel()
 						</code></pre>
@@ -53,8 +53,11 @@ urls: ['/demo/']
 						var $panel = $('.demo-box-<%= direction %>-panel').slideScrollPanel({
 							direction: '<%= direction %>'
 						});
-						var $button = $('.demo-box-<%= direction %>-button').click(function(){
+						$('.demo-box-<%= direction %>-button-show').click(function(){
 							$panel.data('slidescrollpanel').showPanel();
+						});
+						$('.demo-box-<%= direction %>-button-hide').click(function(){
+							$panel.data('slidescrollpanel').hidePanel();
 						});
 					});
 				</script>
