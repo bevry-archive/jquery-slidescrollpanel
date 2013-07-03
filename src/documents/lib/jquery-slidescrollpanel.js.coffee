@@ -435,6 +435,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 		@
 
 	# Enable
+	# z-index ordering for active items should be handled by the implementor's css
 	enable: (event) =>
 		# Prepare
 		$wrap = @$getWrapper()
