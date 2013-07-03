@@ -7,9 +7,6 @@ jQuery = $ = window.jQuery or require('jquery')
 
 # Attach
 $.SlideScrollPanel = class SlideScrollPanel
-	# Desktop interval
-	interval: null
-
 	# Configuration
 	config:
 		# jQuery Element for our panel
@@ -42,6 +39,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 			left: 0
 			overflow: 'auto'
 			'z-index': 100
+			border: '2px solid red'
 
 		# Styles to apply to the content
 		contentStyles:
@@ -96,9 +94,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Destroy
 	destroy: =>
-		# Remove the interval to stop it firing
-		@clearInterval()
-
 		# Stop listening
 		@removeListeners()
 
@@ -107,9 +102,18 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Remove Listeners
 	removeListeners: =>
-		@$getWrapper()
-			.off('mouseleave', @leavePanelHelper)
-			.off('touchend', @leavePanelHelper)
+		if @isTouchDevice()
+			@$getWrapper()
+				.off('touchstart', @enterPanelHelper)
+				.off('touchend',   @leavePanelHelper)
+			@$getContent()
+				.off('touchstart', @enterPanelHelper)
+		else
+			@$getContent()
+				.off('mouseenter', @enterPanelHelper)
+				.off('mouseleave', @leavePanelHelper)
+			@$getWrapper()
+				.off('scroll',     @leavePanelHelper)
 		$(window)
 			.off('resize', @resize)
 		@
@@ -117,9 +121,18 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Add Listeners
 	addListeners: =>
 		@removeListeners()
-		@$getWrapper()
-			.on('mouseleave', @leavePanelHelper)
-			.on('touchend', @leavePanelHelper)
+		if @isTouchDevice()
+			@$getWrapper()
+				.on('touchstart', @enterPanelHelper)
+				.on('touchend',   @leavePanelHelper)
+			@$getContent()
+				.on('touchstart', @enterPanelHelper)
+		else
+			@$getContent()
+				.on('mouseenter', @enterPanelHelper)
+				.on('mouseleave', @leavePanelHelper)
+			@$getWrapper()
+				.on('scroll',     @leavePanelHelper)
 		$(window)
 			.on('resize', @resize)
 		@
@@ -227,36 +240,17 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Is Active
 	active: (active) =>
 		$wrap = @$getWrapper()
-		if active is true
-			$wrap.addClass('slidescrollpanel-active').show()
-			return @
-		else if active is false
-			$wrap.removeClass('slidescrollpanel-active').hide()
-			return @
+		if active?
+			if active is true
+				$wrap.addClass('slidescrollpanel-active').show()
+			else if active is false
+				$wrap.removeClass('slidescrollpanel-active').hide()
 		else
 			active = $wrap.hasClass('slidescrollpanel-active')
 			return active
 
-	# Add Interval
-	# Necessary for non-touch devices as they do not have touch events
-	# TODO: why? we have mouseleave, isn't that good enough?
-	addInterval: =>
-		# If we are a touch device, then we do not need the helper as we have touch events instead!
-		return  if @isTouchDevice()
-
-		# We are on a non-touch device, so need the helper as we don't have touch events!
-		@clearInterval()
-		@interval = setInterval(@leavePanelHelper, 2000)
-
 		# Chain
-		@
-
-	# Clear Interval
-	clearInterval: =>
-		if @interval?
-			clearInterval(@interval)
-			@interval = null
-		@
+		return @
 
 	# Resize
 	resize: =>
@@ -278,8 +272,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Show Panel
 	# next()
 	showPanel: (next) =>
-		@clearInterval()
-
 		$wrap = @$getWrapper()
 
 		if @active() is false
@@ -290,7 +282,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		$wrap.stop(true,false).animate @getShowProps(), 400, =>
 			$(window).trigger('resize')
-			@addInterval()
 			return next?()
 
 		# Chain
@@ -299,9 +290,8 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Hide Panel
 	# next()
 	hidePanel: (next) =>
-		@clearInterval()
 		$wrap = @$getWrapper()
-		$wrap.stop(true,false).animate  @getHideProps(), 400, =>
+		$wrap.stop(true,false).animate @getHideProps(), 400, =>
 			@active(false)
 			$(window).trigger('resize')
 			return next?()
@@ -309,19 +299,108 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Chain
 		@
 
+	# Enter Panel Helper
+	enterPanelHelper: (event) =>
+		# Prepare
+		active = @active()
+
+		# Handle
+		console.log 'enter', active, event.currentTarget.className, event
+		if active
+			@enable(event)
+
+		# Chain
+		@
+
+	# Enable
+	enable: (event) =>
+		# Prepare
+		$wrap = @$getWrapper()
+		$content = @$getContent()
+
+		# Disable
+		if @isTouchDevice()
+			currentOffset = $wrap.data('currentOffset')
+			if currentOffset
+				positionOffset =
+					left: 0
+				console.log 'enable:', JSON.stringify(currentOffset), JSON.stringify(positionOffset)
+				$wrap.css(positionOffset)
+				$wrap.prop(currentOffset)
+				$wrap.data('currentOffset', null)
+		else
+			$wrap.css('pointer-events': 'auto')
+
+		# Kill Timer
+		if @leavePanelHelperTimer
+			clearTimeout(@leavePanelHelperTimer)
+			@leavePanelHelperTimer = null
+
+		# Chain
+		@
+
+	# Disable
+	disable: (event) =>
+		# Prepare
+		$wrap = @$getWrapper()
+		$content = @$getContent()
+
+		# Disable
+		if @isTouchDevice()
+			showOffset = @getShowProps()
+			currentOffset =
+				scrollLeft: @getOffset()
+			positionOffset =
+				left: parseInt($content.offset().left, 10) - parseInt($wrap.offset().left, 10)
+			console.log 'disable:', currentOffset, positionOffset, showOffset
+			$wrap.css(positionOffset)
+			$wrap.prop(showOffset)
+			$wrap.data('currentOffset', currentOffset)
+		else
+			$wrap.css('pointer-events': 'none')
+			$content.css('pointer-events': 'auto')
+
+		# Chain
+		@
+
 	# Leave Panel Helper
-	# Used for the desktop interval
-	leavePanelHelper: =>
-		if @active()
+	leavePanelHelperTimer: null
+	leavePanelHelper: (event,opts={}) =>
+		# Prepare
+		active = @active()
+
+		# Handle
+		console.log 'leave', active, event.currentTarget.className, event
+		if active
+			if @isTouchDevice()
+				@disable()
+			else
+				# Kill Timer
+				if @leavePanelHelperTimer
+					clearTimeout(@leavePanelHelperTimer)
+					@leavePanelHelperTimer = null
+
+				# Create Timer
+				if opts.waited isnt true
+					@leavePanelHelperTimer = setTimeout(
+						=> @leavePanelHelper(event,{waited:true})
+						1000
+					)
+				else
+					@disable()
+
+
+			###
 			offset = @getOffset()
 			size =  @getSize()
 
+			# Fetch values
 			if @getInverse()
 				shown = offset is 0
-				over = offset < size/2
+				over  = offset < size/2
 			else
 				shown = offset is size
-				over = offset > size/2
+				over  = offset > size/2
 
 			# Same
 			if shown
@@ -334,6 +413,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 			# No longer active
 			else
 				@hidePanel => @$getEl().trigger('slidescrollpanelout')
+			###
 
 		# Chain
 		@
