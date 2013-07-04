@@ -188,7 +188,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Get Size Value
 	getSizeValue:  =>
 		sizeProperty = @getSizeProperty()
-		sizeValue = @$getWrapper()['outer'+sizeProperty.substr(0,1).toUpperCase()+sizeProperty.substr(1)]()
+		sizeValue = @$getWrapper()['inner'+sizeProperty.substr(0,1).toUpperCase()+sizeProperty.substr(1)]()
 		return sizeValue
 
 
@@ -387,7 +387,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$content = @$getContent()
 		$container = $wrap.parent()
 		width = parseInt($container.css('width'), 10)
-		height = parseInt($container.css('width'), 10)
+		height = parseInt($container.css('height'), 10)
 
 		# Update Sizes
 		$content.css({width})   if @config.autoContentWidth

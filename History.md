@@ -1,5 +1,8 @@
 ## History
 
+- v1.3.0 Unreleased
+	- Panels are now persistant
+
 - v1.2.1 June 7, 2013
 	- Correctly apply `$wrap` configuration
 
