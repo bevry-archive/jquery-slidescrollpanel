@@ -9,6 +9,9 @@ jQuery = $ = window.jQuery or require('jquery')
 $.SlideScrollPanel = class SlideScrollPanel
 	# Configuration
 	config:
+		# Debug
+		debug: false
+
 		# jQuery Element for our panel
 		$el: null
 
@@ -35,6 +38,15 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# The classname to apply to the wrapper when the panel is active
 		wrapActiveClass: 'slidescrollpanel-active'
+
+		# The classname to apply to the wrapper when the panel is visible
+		wrapVisibleClass: 'slidescrollpanel-visible'
+
+		# Auto Show Above Percentage
+		autoShowAbove: 0.7
+
+		# Auto Hide Below Percentage
+		autoHideBelow: 0.3
 
 		# Styles to apply to the wrap
 		wrapStyles:
@@ -101,6 +113,14 @@ $.SlideScrollPanel = class SlideScrollPanel
 	destroy: =>
 		# Stop listening
 		@removeListeners()
+
+		# Chain
+		@
+
+	# Log
+	log: (args...) =>
+		# Log
+		console?.log?.apply(console, args)  if @config.debug
 
 		# Chain
 		@
@@ -366,19 +386,18 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Methods
 
 	# Is Active
-	active: (active) =>
-		$wrap = @$getWrapper()
-		if active?
-			if active is true
-				@enable()
-			else if active is false
-				@disable()
-		else
-			active = $wrap.hasClass(@config.wrapActiveClass)
-			return active
+	isActive: =>
+		active = @$getWrapper().hasClass(@config.wrapActiveClass)
+		return active
+	isInactive: =>
+		return @isActive() is false
 
-		# Chain
-		@
+	# Is Visible
+	isVisible: (active) =>
+		active = @$getWrapper().hasClass(@config.wrapVisibleClass)
+		return active
+	isInvisible: =>
+		return @isVisible() is false
 
 	# Resize
 	resize: =>
@@ -404,21 +423,27 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Show Panel
 	# next()
 	showPanel: (next) =>
+		# Log
+		@log 'showPanel'
+
 		# Prepare
 		$wrap = @$getWrapper()
 
-		# Initialize
-		if $wrap.is(':visible') is false
+		# If we are hidden then reset our properties
+		if @isInvisible()
+			$wrap.show().addClass(@config.wrapVisibleClass).css(opacity:0)
 			@resize()
-			$wrap.css(opacity:0)
-			@active(true)  # must be before prop set
+			@enable()
 			$wrap.prop(@getHideAxisProperties()).css(opacity:1)
+
+		# Otherwise just show
 		else
-			@active(true)
+			@enable()
 
 		# Show
 		$wrap.stop(true,false).animate @getShowAxisProperties(), 400, =>
 			$(window).trigger('resize')
+			@$getEl().trigger('slidescrollpanelin')
 			return next?()
 
 		# Chain
@@ -427,15 +452,24 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Hide Panel
 	# next()
 	hidePanel: (next) =>
+		# Log
+		@log 'hidePanel'
+
+		# No point in hiding if we are already hidden
+		return @  if @isInvisible()
+
 		# Prepare
 		$wrap = @$getWrapper()
 
 		# Hide
-		@active(true)
+		@resize()
+		@enable(null, {alterClass:false})
 		$wrap.stop(true,false).animate @getHideAxisProperties(), 400, =>
 			# Disable
-			@active(false)
+			@disable()
 			$(window).trigger('resize')
+			$wrap.hide().removeClass(@config.wrapVisibleClass)
+			@$getEl().trigger('slidescrollpanelout')
 			return next?()
 
 		# Chain
@@ -443,18 +477,21 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Enable
 	# z-index ordering for active items should be handled by the implementor's css
-	enable: (event) =>
-		# Prepare
-		$wrap = @$getWrapper()
-		$content = @$getContent()
+	enable: (event,opts={}) =>
+		# Log
+		@log 'enable'
 
 		# Kill Timer
 		if @leavePanelHelperTimer?
 			clearTimeout(@leavePanelHelperTimer)
 			@leavePanelHelperTimer = null
 
-		# Class
-		$wrap.addClass(@config.wrapActiveClass).show()
+		# No point in enabling if we are already enabled
+		return @  if @isActive()
+
+		# Prepare
+		$wrap = @$getWrapper()
+		$content = @$getContent()
 
 		# Enable
 		$wrap.css(@getShowPositionStyles())
@@ -465,34 +502,60 @@ $.SlideScrollPanel = class SlideScrollPanel
 			$wrap.prop(cachedProperties)
 			$wrap.data('cachedProperties', null)
 
+		# Class
+		$wrap.addClass(@config.wrapActiveClass)  if opts.alterClass isnt false
+
 		# Chain
 		@
 
 	# Disable
-	disable: (event) =>
-		# Prepare
-		$wrap = @$getWrapper()
-		$content = @$getContent()
+	disable: (event,opts={}) =>
+		# Log
+		@log 'disable'
 
 		# Kill Timer
 		if @leavePanelHelperTimer?
 			clearTimeout(@leavePanelHelperTimer)
 			@leavePanelHelperTimer = null
 
-		# Disable
-		$wrap.removeClass(@config.wrapActiveClass)
+		# No point in disabling if we are already disabled
+		return @  if @isInactive()
 
-		# Apply
+		# Prepare
+		$wrap = @$getWrapper()
+		$content = @$getContent()
+
+		# Disable
 		apply = =>
-			return  if $wrap.hasClass(@config.wrapActiveClass)
+			# How much is visible?
+			axisValue = @getAxisValue()
+			if @isInverse()
+				showAxisValue = @getHideAxisValue()
+				percentVisible = 1 - (axisValue / showAxisValue)
+			else
+				showAxisValue = @getShowAxisValue()
+				percentVisible = axisValue / showAxisValue
+
+			# Disable
 			$wrap.data('cachedProperties', @getAxisProperties())
 			$wrap.css(@getDesiredPositionStyles())
 			$wrap.prop(@getShowAxisProperties())
+			$wrap.removeClass(@config.wrapActiveClass)  if opts.alterClass isnt false
+
+			# Auto Show
+			if @config.autoShowAbove and percentVisible >= @config.autoShowAbove
+				@showPanel()
+
+			# Auto Hide
+			else if @config.autoHideBelow and percentVisible <= @config.autoHideBelow
+				@hidePanel()
 
 		# Android has an issue where scrollLeft can only applied after a manual click event
 		# so we will need to wait for a click event to happen
+		# we've tried feature detection here, to see if the axis gets applied correctly
+		# and it does get applied correctly, it just doesn't refresh the view
 		isAndroid = navigator.userAgent.toLowerCase().indexOf('android') isnt -1
-		if event?.type is 'touchend' and isAndroid
+		if event? and event.type is 'touchend' and isAndroid
 			$(document.body).one('click', apply)
 		else
 			apply()
@@ -502,6 +565,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Enter Panel Helper
 	enterPanelHelper: (event) =>
+		# Log
+		@log 'enterPanelHelper'
+
 		# Handle
 		@enable(event)
 
@@ -511,9 +577,11 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Leave Panel Helper
 	leavePanelHelperTimer: null
 	leavePanelHelper: (event,opts={}) =>
+		# Log
+		@log 'leavePanelHelper'
+
 		# Handle
-		active = @active()
-		if active
+		if @isActive()
 
 			# Touch devices we can fire disable right away
 			if @isTouchDevice()
@@ -536,32 +604,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 					)
 				else
 					@disable(event)
-
-
-			###
-			offset = @getOffset()
-			size =  @getSize()
-
-			# Fetch values
-			if @getInverse()
-				shown = offset is 0
-				over  = offset < size/2
-			else
-				shown = offset is size
-				over  = offset > size/2
-
-			# Same
-			if shown
-				# ignore
-
-			# Still active
-			else if over
-				@showPanel => @$getEl().trigger('slidescrollpanelin')
-
-			# No longer active
-			else
-				@hidePanel => @$getEl().trigger('slidescrollpanelout')
-			###
 
 		# Chain
 		@

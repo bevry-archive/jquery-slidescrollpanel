@@ -1,5 +1,8 @@
 ## History
 
+- v1.4.0 July 4, 2013
+	- Added `autoShowAbove` and `autoHideBelow` properties
+
 - v1.3.1 July 4, 2013
 	- Fixed non-android touch devices
 
