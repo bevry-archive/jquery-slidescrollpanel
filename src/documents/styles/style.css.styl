@@ -22,10 +22,23 @@
 		padding: 0
 		text-align: center
 
+		.slidescrollpanel-wrap
+			background: rgba(255,0,0,0.05)
+			border: 1px solid red
+
 		.slidescrollpanel-content
 			text-align: left
 			border: 1px solid black
 			background: #EEE
+			position: relative
 
-		.center-button
-			margin-top: 140px
+			// bugfix for android
+			pre > code
+				overflow: hidden
+
+		.demo-buttons
+			margin-top: 100px
+			button
+				margin: 0.5em
+				width: 150px
+				max-width: 40%

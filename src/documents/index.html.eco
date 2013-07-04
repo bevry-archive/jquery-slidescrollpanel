@@ -18,11 +18,15 @@ urls: ['/demo/']
 	<div class="demo">
 
 		<div class="demo-box">
+			<div class="demo-buttons">
+				<% for direction in ['right','left','top','bottom']: %>
+					<button class="demo-box-<%= direction %>-button-show">
+						slide in from <%= direction %>
+					</button>
+				<% end %>
+			</div>
 			<% for direction in ['right','left','top','bottom']: %>
-				<button class="center-button demo-box-<%= direction %>-button-show">
-					slide in from <%= direction %>
-				</button>
-				<div class="demo-box-<%= direction %>-panel">
+				<div class="demo-box-panel demo-box-<%= direction %>-panel">
 					<div>
 						Hello from the <%= direction %> side! Scroll or swipe me away!
 					</div>

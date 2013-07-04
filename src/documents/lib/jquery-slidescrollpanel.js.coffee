@@ -30,6 +30,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Should we auto set the wrap's height?
 		autoWrapHeight: true
 
+		# How long should we wait on desktop devices for the user to scroll again
+		disableDelay: 1*1000
+
 		# Styles to apply to the wrap
 		wrapStyles:
 			margin: 0
@@ -39,7 +42,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 			left: 0
 			overflow: 'auto'
 			'z-index': 100
-			border: '2px solid red'
 
 		# Styles to apply to the content
 		contentStyles:
@@ -183,7 +185,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Get Size Value
 	getSizeValue:  =>
 		sizeProperty = @getSizeProperty()
-		sizeValue = @$getWrapper()[sizeProperty]()
+		sizeValue = @$getWrapper()['outer'+sizeProperty.substr(0,1).toUpperCase()+sizeProperty.substr(1)]()
 		return sizeValue
 
 
@@ -381,8 +383,8 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$wrap = @$getWrapper()
 		$content = @$getContent()
 		$container = $wrap.parent()
-		width = $container.width()
-		height = $container.height()
+		width = parseInt($container.css('width'), 10)
+		height = parseInt($container.css('width'), 10)
 
 		# Update Sizes
 		$content.css({width})   if @config.autoContentWidth
@@ -399,14 +401,17 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Show Panel
 	# next()
 	showPanel: (next) =>
+		# Prepare
 		$wrap = @$getWrapper()
 
+		# Initialize
 		if @active() is false
 			@resize()
 			$wrap.css(opacity:0)
 			@active(true)  # must be before prop set
 			$wrap.prop(@getHideAxisProperties()).css(opacity:1)
 
+		# Show
 		$wrap.stop(true,false).animate @getShowAxisProperties(), 400, =>
 			$(window).trigger('resize')
 			return next?()
@@ -417,19 +422,16 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Hide Panel
 	# next()
 	hidePanel: (next) =>
+		# Prepare
 		$wrap = @$getWrapper()
+
+		# Hide
+		@active(true)
 		$wrap.stop(true,false).animate @getHideAxisProperties(), 400, =>
+			# Disable
 			@active(false)
 			$(window).trigger('resize')
 			return next?()
-
-		# Chain
-		@
-
-	# Enter Panel Helper
-	enterPanelHelper: (event) =>
-		# Handle
-		@enable(event)
 
 		# Chain
 		@
@@ -484,18 +486,29 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Chain
 		@
 
+	# Enter Panel Helper
+	enterPanelHelper: (event) =>
+		# Handle
+		@enable(event)
+
+		# Chain
+		@
+
 	# Leave Panel Helper
 	leavePanelHelperTimer: null
 	leavePanelHelper: (event,opts={}) =>
-		# Prepare
-		active = @active()
-
 		# Handle
-		console.log 'leave', event, active, opts, @leavePanelHelperTimer
+		active = @active()
 		if active
+
+			# Touch devices we can fire disable right away
 			if @isTouchDevice()
 				@disable()
-			else if event.type isnt 'scroll' or @leavePanelHelperTimer?  # don't allow initial enable scroll to trigger a hide
+
+			# Desktop devices we need to ensure:
+			# 1. that we are not the initial scroll event
+			# 2. that we have waited a while after the last event
+			else if event.type isnt 'scroll' or @leavePanelHelperTimer?
 				# Kill Timer
 				if @leavePanelHelperTimer?
 					clearTimeout(@leavePanelHelperTimer)
@@ -504,8 +517,8 @@ $.SlideScrollPanel = class SlideScrollPanel
 				# Create Timer
 				if opts.waited isnt true
 					@leavePanelHelperTimer = setTimeout(
-						=> @leavePanelHelper(event,{waited:true})
-						1000
+						=> @leavePanelHelper(event, {waited:true})
+						@config.disableDelay
 					)
 				else
 					@disable()
