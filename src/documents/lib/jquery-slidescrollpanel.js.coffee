@@ -460,14 +460,23 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$wrap.show()
 		@resize()
 
-		# Check
+		# Init
 		if @isInvisible()
-			$wrap.css(@getHidePositionStyles()).prop(@getShowAxisProperties()).addClass(@config.wrapVisibleClass)
+			$wrap.prop(@getHideAxisProperties())
+			$wrap.css(@getShowPositionStyles())
+			# $wrap.css(@getHidePositionStyles())
+			# $wrap.prop(@getShowAxisProperties())
+			$wrap.addClass(@config.wrapVisibleClass)
 		else
-			$wrap.css(@getDesiredPositionStyles()).prop(@getShowAxisProperties())
+			@enable(null, {alterClass:false})
+			# $wrap.css(@getDesiredPositionStyles())
+			# $wrap.prop(@getShowAxisProperties())
 
-		# Show
-		$wrap.stop(true,false).animate @getShowPositionStyles(), 400, =>
+		# Animate
+		animateOpts = @getShowAxisProperties()
+		# animateOpts = @getShowPositionStyles()
+		$wrap.stop(true,false).animate animateOpts, 400, =>
+			@enable()
 			$(window).trigger('resize')
 			@$getEl().trigger('slidescrollpanelin')
 			return next?()
@@ -487,13 +496,21 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Prepare
 		$wrap = @$getWrapper()
 
-		# Hide
+		# Prepare
 		@resize()
-		$wrap.css(@getDesiredPositionStyles()).prop(@getShowAxisProperties())
-		$wrap.stop(true,false).animate @getHidePositionStyles(), 400, =>
-			# Disable
-			$(window).trigger('resize')
+
+		# Init
+		@enable(null, {alterClass:false})
+		# $wrap.css(@getDesiredPositionStyles())
+		# $wrap.prop(@getShowAxisProperties())
+
+		# Animate
+		animateOpts = @getHideAxisProperties()
+		# animateOpts = @getHidePositionStyles()
+		$wrap.stop(true,false).animate animateOpts, 400, =>
+			@disable()
 			$wrap.removeClass(@config.wrapVisibleClass)
+			$(window).trigger('resize')
 			@$getEl().trigger('slidescrollpanelout')
 			return next?()
 
@@ -542,10 +559,10 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 			# Auto Show
 			if @config.autoShowAbove and percentVisible >= @config.autoShowAbove
-				@showPanel()
+				@showPanel()  if percentVisible
 
 			# Auto Hide
-			else if @config.autoHideBelow and percentVisible <= @config.autoHideBelow
+			else if percentVisible and @config.autoHideBelow and percentVisible <= @config.autoHideBelow
 				@hidePanel()
 
 			# Keep visible
