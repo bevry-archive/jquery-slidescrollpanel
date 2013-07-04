@@ -491,7 +491,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# Android has an issue where scrollLeft can only applied after a manual click event
 		# so we will need to wait for a click event to happen
-		isAndroid = navigator.userAgent.toLowerCase().indexOf('android')
+		isAndroid = navigator.userAgent.toLowerCase().indexOf('android') isnt -1
 		if event?.type is 'touchend' and isAndroid
 			$(document.body).one('click', apply)
 		else

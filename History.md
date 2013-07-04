@@ -1,5 +1,8 @@
 ## History
 
+- v1.3.1 July 4, 2013
+	- Fixed non-android touch devices
+
 - v1.3.0 July 4, 2013
 	- Panels are now persistant
 
