@@ -121,7 +121,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	log: (args...) =>
 		# Log
 		if @config.debug
-			if true
+			if false
 				$('.demo-description').append('<div>'+JSON.stringify(args)+'</div>')
 			else if console?.log?
 				console.log.apply(console, args)
@@ -135,7 +135,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	removeListeners: =>
 		if @isTouchDevice()
 			@$getWrapper()
-				.off('touchstart', @enterPanelHelper)
+				.off('touchmove',  @enterPanelHelper)
 				.off('touchend',   @leavePanelHelper)
 		else
 			@$getContent()
@@ -152,7 +152,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 		@removeListeners()
 		if @isTouchDevice()
 			@$getWrapper()
-				.on('touchstart', @enterPanelHelper)
+				.on('touchmove',  @enterPanelHelper)
 				.on('touchend',   @leavePanelHelper)
 		else
 			@$getContent()
@@ -566,6 +566,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Log
 		@log 'enableHelper'
 
+		# Kill Android Hack
+		$(document.body).off('click', @disableHelper)
+
 		# Enable
 		@enable(event, opts)
 
@@ -576,6 +579,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 	disableHelper: (event,opts={}) =>
 		# Log
 		@log 'disableHelper'
+
+		# Kill Android Hack
+		$(document.body).off('click', @disableHelper)
 
 		# Disable
 		apply = =>
@@ -600,7 +606,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# and it does get applied correctly, it just doesn't refresh the view
 		isAndroid = navigator.userAgent.toLowerCase().indexOf('android') isnt -1
 		if event? and event.type is 'touchend' and isAndroid
-			$(document.body).one('click', apply)
+			$(document.body).one('click', @disableHelper)
 		else
 			apply()
 
@@ -609,14 +615,16 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Enter Panel Helper
 	enterPanelHelper: (event) =>
-		# Log
-		return @
-		@log 'enterPanelHelper'
-
 		# Kill Timer
 		if @leavePanelHelperTimer?
 			clearTimeout(@leavePanelHelperTimer)
 			@leavePanelHelperTimer = null
+
+		# No point in enabling if we are already active
+		return @  if @isActive()
+
+		# Log
+		@log 'enterPanelHelper', @isActive()
 
 		# Handle
 		@enableHelper(event)
@@ -627,34 +635,33 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Leave Panel Helper
 	leavePanelHelperTimer: null
 	leavePanelHelper: (event,opts={}) =>
+		# No point in enabling if we are already inactive
+		return @  if @isInactive()
+
 		# Log
-		return @
-		@log 'leavePanelHelper'
+		@log 'leavePanelHelper', @isActive()
 
-		# Handle
-		if @isActive()
+		# Touch devices we can fire disable right away
+		if @isTouchDevice()
+			@disableHelper(event)
 
-			# Touch devices we can fire disable right away
-			if @isTouchDevice()
+		# Desktop devices we need to ensure:
+		# 1. that we are not the initial scroll event
+		# 2. that we have waited a while after the last event
+		else if event.type isnt 'scroll' or @leavePanelHelperTimer?
+			# Kill Timer
+			if @leavePanelHelperTimer?
+				clearTimeout(@leavePanelHelperTimer)
+				@leavePanelHelperTimer = null
+
+			# Create Timer
+			if opts.waited isnt true
+				@leavePanelHelperTimer = setTimeout(
+					=> @leavePanelHelper(event, {waited:true})
+					@config.disableDelay
+				)
+			else
 				@disableHelper(event)
-
-			# Desktop devices we need to ensure:
-			# 1. that we are not the initial scroll event
-			# 2. that we have waited a while after the last event
-			else if event.type isnt 'scroll' or @leavePanelHelperTimer?
-				# Kill Timer
-				if @leavePanelHelperTimer?
-					clearTimeout(@leavePanelHelperTimer)
-					@leavePanelHelperTimer = null
-
-				# Create Timer
-				if opts.waited isnt true
-					@leavePanelHelperTimer = setTimeout(
-						=> @leavePanelHelper(event, {waited:true})
-						@config.disableDelay
-					)
-				else
-					@disableHelper(event)
 
 		# Chain
 		@
