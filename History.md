@@ -1,6 +1,6 @@
 ## History
 
-- v1.3.0 Unreleased
+- v1.3.0 July 4, 2013
 	- Panels are now persistant
 
 - v1.2.1 June 7, 2013
