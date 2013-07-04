@@ -44,7 +44,7 @@
 		<h2><a href="<%= @package.project  %>" title="Project Page">Project Page</a></h2>
 		<h2><a href="<%= @package.bugs.url %>" title="Bug Tracker">Bug Tracker</a></h2>
 		<div class="social-buttons">
-			<%- @getSocialButtons() %>
+			<%- if 'development' in @getEnvironments() then 'social buttons hidden on development' else @getSocialButtons() %>
 		</div>
 	</div>
 

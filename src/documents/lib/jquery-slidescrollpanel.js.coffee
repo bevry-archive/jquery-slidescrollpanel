@@ -405,11 +405,13 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$wrap = @$getWrapper()
 
 		# Initialize
-		if @active() is false
+		if $wrap.is(':visible') is false
 			@resize()
 			$wrap.css(opacity:0)
 			@active(true)  # must be before prop set
 			$wrap.prop(@getHideAxisProperties()).css(opacity:1)
+		else
+			@active(true)
 
 		# Show
 		$wrap.stop(true,false).animate @getShowAxisProperties(), 400, =>
@@ -451,13 +453,13 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Class
 		$wrap.addClass('slidescrollpanel-active').show()
 
-		# Restore
-		cachedStyles = $wrap.data('cachedStyles')
+		# Enable
+		$wrap.css(@getShowPositionStyles())
+
+		# Position
 		cachedProperties = $wrap.data('cachedProperties')
-		if cachedProperties and cachedStyles
-			$wrap.css(cachedStyles)
+		if cachedProperties
 			$wrap.prop(cachedProperties)
-			$wrap.data('cachedStyles', null)
 			$wrap.data('cachedProperties', null)
 
 		# Chain
@@ -476,7 +478,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# Disable
 		$wrap.data('cachedProperties', @getAxisProperties())
-		$wrap.data('cachedStyles', @getPositionStyles())
 		$wrap.css(@getDesiredPositionStyles())
 		$wrap.prop(@getShowAxisProperties())
 
