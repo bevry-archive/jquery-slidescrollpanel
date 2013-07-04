@@ -120,7 +120,13 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Log
 	log: (args...) =>
 		# Log
-		console?.log?.apply(console, args)  if @config.debug
+		if @config.debug
+			if true
+				$('.demo-description').append('<div>'+JSON.stringify(args)+'</div>')
+			else if console?.log?
+				console.log.apply(console, args)
+			else
+				alert JSON.stringify(args)
 
 		# Chain
 		@
@@ -462,19 +468,18 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# Init
 		if @isInvisible()
-			$wrap.prop(@getHideAxisProperties())
-			$wrap.css(@getShowPositionStyles())
-			# $wrap.css(@getHidePositionStyles())
-			# $wrap.prop(@getShowAxisProperties())
+			# $wrap.prop(@getHideAxisProperties())
+			# $wrap.css(@getShowPositionStyles())
+			$wrap.css(@getHidePositionStyles())
+			$wrap.prop(@getShowAxisProperties())
 			$wrap.addClass(@config.wrapVisibleClass)
 		else
-			@enable(null, {alterClass:false})
-			# $wrap.css(@getDesiredPositionStyles())
-			# $wrap.prop(@getShowAxisProperties())
+			# @enable(null, {alterClass:false})
+			@disable()
 
 		# Animate
-		animateOpts = @getShowAxisProperties()
-		# animateOpts = @getShowPositionStyles()
+		# animateOpts = @getShowAxisProperties()
+		animateOpts = @getShowPositionStyles()
 		$wrap.stop(true,false).animate animateOpts, 400, =>
 			@enable()
 			$(window).trigger('resize')
@@ -500,15 +505,13 @@ $.SlideScrollPanel = class SlideScrollPanel
 		@resize()
 
 		# Init
-		@enable(null, {alterClass:false})
-		# $wrap.css(@getDesiredPositionStyles())
-		# $wrap.prop(@getShowAxisProperties())
+		# @enable(null, {alterClass:false})
+		@disable()
 
 		# Animate
-		animateOpts = @getHideAxisProperties()
-		# animateOpts = @getHidePositionStyles()
+		# animateOpts = @getHideAxisProperties()
+		animateOpts = @getHidePositionStyles()
 		$wrap.stop(true,false).animate animateOpts, 400, =>
-			@disable()
 			$wrap.removeClass(@config.wrapVisibleClass)
 			$(window).trigger('resize')
 			@$getEl().trigger('slidescrollpanelout')
@@ -518,23 +521,20 @@ $.SlideScrollPanel = class SlideScrollPanel
 		@
 
 	# Enable
-	# z-index ordering for active items should be handled by the implementor's css
 	enable: (event,opts={}) =>
-		# Log
-		@log 'enable'
-
 		# No point in enabling if we are already enabled
 		return @  if @isActive()
+
+		# Log
+		@log 'enable'
 
 		# Prepare
 		$wrap = @$getWrapper()
 		$content = @$getContent()
 
-		# Enable
-		$wrap.prop(@getDesiredAxisProperties())  if event?
+		# Disable
+		$wrap.prop(@getDesiredAxisProperties())
 		$wrap.css(@getShowPositionStyles())
-
-		# Class
 		$wrap.addClass(@config.wrapActiveClass)  if opts.alterClass isnt false
 
 		# Chain
@@ -542,15 +542,40 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Disable
 	disable: (event,opts={}) =>
-		# Log
-		@log 'disable'
-
 		# No point in disabling if we are already disabled
 		return @  if @isInactive()
+
+		# Log
+		@log 'disable'
 
 		# Prepare
 		$wrap = @$getWrapper()
 		$content = @$getContent()
+
+		# Disable
+		$wrap.css(@getDesiredPositionStyles())
+		$wrap.prop(@getShowAxisProperties())
+		$wrap.removeClass(@config.wrapActiveClass)  if opts.alterClass isnt false
+
+		# Chain
+		@
+
+	# Enable Helper
+	# z-index ordering for active items should be handled by the implementor's css
+	enableHelper: (event,opts={}) =>
+		# Log
+		@log 'enableHelper'
+
+		# Enable
+		@enable(event, opts)
+
+		# Chain
+		@
+
+	# Disable
+	disableHelper: (event,opts={}) =>
+		# Log
+		@log 'disableHelper'
 
 		# Disable
 		apply = =>
@@ -567,9 +592,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 			# Keep visible
 			else
-				$wrap.css(@getDesiredPositionStyles())
-				$wrap.prop(@getShowAxisProperties())
-				$wrap.removeClass(@config.wrapActiveClass)  if opts.alterClass isnt false
+				@disable(event, opts)
 
 		# Android has an issue where scrollLeft can only applied after a manual click event
 		# so we will need to wait for a click event to happen
@@ -587,6 +610,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Enter Panel Helper
 	enterPanelHelper: (event) =>
 		# Log
+		return @
 		@log 'enterPanelHelper'
 
 		# Kill Timer
@@ -595,7 +619,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 			@leavePanelHelperTimer = null
 
 		# Handle
-		@enable(event)
+		@enableHelper(event)
 
 		# Chain
 		@
@@ -604,6 +628,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	leavePanelHelperTimer: null
 	leavePanelHelper: (event,opts={}) =>
 		# Log
+		return @
 		@log 'leavePanelHelper'
 
 		# Handle
@@ -611,7 +636,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 			# Touch devices we can fire disable right away
 			if @isTouchDevice()
-				@disable(event)
+				@disableHelper(event)
 
 			# Desktop devices we need to ensure:
 			# 1. that we are not the initial scroll event
@@ -629,7 +654,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 						@config.disableDelay
 					)
 				else
-					@disable(event)
+					@disableHelper(event)
 
 		# Chain
 		@
