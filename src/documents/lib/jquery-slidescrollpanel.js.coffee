@@ -10,7 +10,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Configuration
 	config:
 		# Debug
-		debug: false
+		debug: true
 
 		# jQuery Element for our panel
 		$el: null
@@ -280,7 +280,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Get Hide Position Value
 	getHidePositionValue: =>
-		positionValue = @getSizeValue()+'px'
+		positionValue = (if @isInverse() then @getSizeValue()*-1 else @getSizeValue())+'px'
 		return positionValue
 
 	# Get Desired Position Value
@@ -294,12 +294,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 		opts[@getPositionProperty()] = @getPositionValue()
 		return opts
 
-	# Get Desired Position Styles
-	getDesiredPositionStyles: =>
-		opts = {}
-		opts[@getPositionProperty()] = (@getShowAxisValue()-@getAxisValue())+'px'
-		return opts
-
 	# Get Show Position Styles
 	getShowPositionStyles: =>
 		opts = {}
@@ -311,6 +305,17 @@ $.SlideScrollPanel = class SlideScrollPanel
 		opts = {}
 		opts[@getPositionProperty()] = @getHidePositionValue()
 		return opts
+
+	# Get Desired Position Styles
+	getDesiredPositionStyles: =>
+		opts = {}
+		opts[@getPositionProperty()] = (@getShowAxisValue()-@getAxisValue())+'px'
+		return opts
+
+	# Get Position Percent
+	getPositionPercent: =>
+		percentVisible = 1 - parseInt(@getPositionValue(), 10) / parseInt(@getHidePositionValue(), 10)
+		return percentVisible
 
 
 	# ---------------------------------
@@ -345,6 +350,14 @@ $.SlideScrollPanel = class SlideScrollPanel
 		axisValue = if @isInverse() then @getSizeValue() else 0
 		return axisValue
 
+	# Get Desired Axis Value
+	getDesiredAxisValue: =>
+		if @isInverse()
+			axisValue = parseInt(@getShowPositionValue(), 10) - parseInt(@getPositionValue(), 10)
+		else
+			axisValue = parseInt(@getHidePositionValue(), 10) - parseInt(@getPositionValue(), 10)
+		return axisValue
+
 	# Get Axis Properties
 	getAxisProperties: =>
 		opts = {}
@@ -362,6 +375,20 @@ $.SlideScrollPanel = class SlideScrollPanel
 		opts = {}
 		opts[@getAxisProperty()] = @getHideAxisValue()
 		return opts
+
+	# Get Desired Axis Properties
+	getDesiredAxisProperties: =>
+		opts = {}
+		opts[@getAxisProperty()] = @getDesiredAxisValue()
+		return opts
+
+	# Get Axis Percent
+	getAxisPercent: =>
+		if @isInverse()
+			percentVisible = 1 - @getAxisValue() / @getHideAxisValue()
+		else
+			percentVisible = @getAxisValue() / @getShowAxisValue()
+		return percentVisible
 
 
 	# ---------------------------------
@@ -429,19 +456,18 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Prepare
 		$wrap = @$getWrapper()
 
-		# If we are hidden then reset our properties
-		if @isInvisible()
-			$wrap.show().addClass(@config.wrapVisibleClass).css(opacity:0)
-			@resize()
-			@enable()
-			$wrap.prop(@getHideAxisProperties()).css(opacity:1)
+		# Prepare
+		$wrap.show()
+		@resize()
 
-		# Otherwise just show
+		# Check
+		if @isInvisible()
+			$wrap.css(@getHidePositionStyles()).prop(@getShowAxisProperties()).addClass(@config.wrapVisibleClass)
 		else
-			@enable()
+			$wrap.css(@getDesiredPositionStyles()).prop(@getShowAxisProperties())
 
 		# Show
-		$wrap.stop(true,false).animate @getShowAxisProperties(), 400, =>
+		$wrap.stop(true,false).animate @getShowPositionStyles(), 400, =>
 			$(window).trigger('resize')
 			@$getEl().trigger('slidescrollpanelin')
 			return next?()
@@ -463,12 +489,11 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# Hide
 		@resize()
-		@enable(null, {alterClass:false})
-		$wrap.stop(true,false).animate @getHideAxisProperties(), 400, =>
+		$wrap.css(@getDesiredPositionStyles()).prop(@getShowAxisProperties())
+		$wrap.stop(true,false).animate @getHidePositionStyles(), 400, =>
 			# Disable
-			@disable()
 			$(window).trigger('resize')
-			$wrap.hide().removeClass(@config.wrapVisibleClass)
+			$wrap.removeClass(@config.wrapVisibleClass)
 			@$getEl().trigger('slidescrollpanelout')
 			return next?()
 
@@ -481,11 +506,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Log
 		@log 'enable'
 
-		# Kill Timer
-		if @leavePanelHelperTimer?
-			clearTimeout(@leavePanelHelperTimer)
-			@leavePanelHelperTimer = null
-
 		# No point in enabling if we are already enabled
 		return @  if @isActive()
 
@@ -494,13 +514,8 @@ $.SlideScrollPanel = class SlideScrollPanel
 		$content = @$getContent()
 
 		# Enable
+		$wrap.prop(@getDesiredAxisProperties())  if event?
 		$wrap.css(@getShowPositionStyles())
-
-		# Position
-		cachedProperties = $wrap.data('cachedProperties')
-		if cachedProperties
-			$wrap.prop(cachedProperties)
-			$wrap.data('cachedProperties', null)
 
 		# Class
 		$wrap.addClass(@config.wrapActiveClass)  if opts.alterClass isnt false
@@ -513,11 +528,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Log
 		@log 'disable'
 
-		# Kill Timer
-		if @leavePanelHelperTimer?
-			clearTimeout(@leavePanelHelperTimer)
-			@leavePanelHelperTimer = null
-
 		# No point in disabling if we are already disabled
 		return @  if @isInactive()
 
@@ -527,20 +537,8 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# Disable
 		apply = =>
-			# How much is visible?
-			axisValue = @getAxisValue()
-			if @isInverse()
-				showAxisValue = @getHideAxisValue()
-				percentVisible = 1 - (axisValue / showAxisValue)
-			else
-				showAxisValue = @getShowAxisValue()
-				percentVisible = axisValue / showAxisValue
-
-			# Disable
-			$wrap.data('cachedProperties', @getAxisProperties())
-			$wrap.css(@getDesiredPositionStyles())
-			$wrap.prop(@getShowAxisProperties())
-			$wrap.removeClass(@config.wrapActiveClass)  if opts.alterClass isnt false
+			# Prepare
+			percentVisible = @getAxisPercent()
 
 			# Auto Show
 			if @config.autoShowAbove and percentVisible >= @config.autoShowAbove
@@ -549,6 +547,12 @@ $.SlideScrollPanel = class SlideScrollPanel
 			# Auto Hide
 			else if @config.autoHideBelow and percentVisible <= @config.autoHideBelow
 				@hidePanel()
+
+			# Keep visible
+			else
+				$wrap.css(@getDesiredPositionStyles())
+				$wrap.prop(@getShowAxisProperties())
+				$wrap.removeClass(@config.wrapActiveClass)  if opts.alterClass isnt false
 
 		# Android has an issue where scrollLeft can only applied after a manual click event
 		# so we will need to wait for a click event to happen
@@ -567,6 +571,11 @@ $.SlideScrollPanel = class SlideScrollPanel
 	enterPanelHelper: (event) =>
 		# Log
 		@log 'enterPanelHelper'
+
+		# Kill Timer
+		if @leavePanelHelperTimer?
+			clearTimeout(@leavePanelHelperTimer)
+			@leavePanelHelperTimer = null
 
 		# Handle
 		@enable(event)
