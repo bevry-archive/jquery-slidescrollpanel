@@ -33,6 +33,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# How long should we wait on desktop devices for the user to scroll again
 		disableDelay: 1*1000
 
+		# The classname to apply to the wrapper when the panel is active
+		wrapActiveClass: 'slidescrollpanel-active'
+
 		# Styles to apply to the wrap
 		wrapStyles:
 			margin: 0
@@ -371,7 +374,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 			else if active is false
 				@disable()
 		else
-			active = $wrap.hasClass('slidescrollpanel-active')
+			active = $wrap.hasClass(@config.wrapActiveClass)
 			return active
 
 		# Chain
@@ -451,7 +454,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 			@leavePanelHelperTimer = null
 
 		# Class
-		$wrap.addClass('slidescrollpanel-active').show()
+		$wrap.addClass(@config.wrapActiveClass).show()
 
 		# Enable
 		$wrap.css(@getShowPositionStyles())
@@ -477,12 +480,22 @@ $.SlideScrollPanel = class SlideScrollPanel
 			@leavePanelHelperTimer = null
 
 		# Disable
-		$wrap.data('cachedProperties', @getAxisProperties())
-		$wrap.css(@getDesiredPositionStyles())
-		$wrap.prop(@getShowAxisProperties())
+		$wrap.removeClass(@config.wrapActiveClass)
 
-		# Disable
-		$wrap.removeClass('slidescrollpanel-active')
+		# Apply
+		apply = =>
+			return  if $wrap.hasClass(@config.wrapActiveClass)
+			$wrap.data('cachedProperties', @getAxisProperties())
+			$wrap.css(@getDesiredPositionStyles())
+			$wrap.prop(@getShowAxisProperties())
+
+		# Android has an issue where scrollLeft can only applied after a manual click event
+		# so we will need to wait for a click event to happen
+		isAndroid = navigator.userAgent.toLowerCase().indexOf('android')
+		if event?.type is 'touchend' and isAndroid
+			$(document.body).one('click', apply)
+		else
+			apply()
 
 		# Chain
 		@
@@ -504,7 +517,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 			# Touch devices we can fire disable right away
 			if @isTouchDevice()
-				@disable()
+				@disable(event)
 
 			# Desktop devices we need to ensure:
 			# 1. that we are not the initial scroll event
@@ -522,7 +535,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 						@config.disableDelay
 					)
 				else
-					@disable()
+					@disable(event)
 
 
 			###
