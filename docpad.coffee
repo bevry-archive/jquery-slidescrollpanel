@@ -1,7 +1,9 @@
+packageData = require('./package.json')
+
 module.exports =
 
 	templateData:
-		package: packageData = require('./package.json')
+		package: packageData
 		site:
 			url: packageData.homepage
 			services:

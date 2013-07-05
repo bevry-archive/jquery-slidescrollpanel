@@ -38,7 +38,7 @@
 	<!-- Demo -->
 
 	<div class="section links" id="links">
-		<h1><%= @package.title %> - <%= @package.tagline or @package.description %></h1>
+		<h1><%= @package.title %> v<%= @package.version %><Br/><small><%= @package.tagline or @package.description %></small></h1>
 		<h2><a href="<%= @package.download %>" title="Download" id="download">Download</a></h2>
 		<h2><a href="<%= @package.homepage %>" title="Demo Page">Demo Page</a></h2>
 		<h2><a href="<%= @package.project  %>" title="Project Page">Project Page</a></h2>
