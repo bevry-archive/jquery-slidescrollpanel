@@ -10,7 +10,7 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Configuration
 	config:
 		# Debug
-		debug: true
+		debug: false
 
 		# jQuery Element for our panel
 		$el: null
@@ -47,6 +47,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 		# Auto Hide Below Percentage
 		autoHideBelow: 0.3
+
+		# Keep Visible By
+		keepVisibleBy: false
 
 		# Styles to apply to the wrap
 		wrapStyles:
@@ -286,7 +289,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Get Hide Position Value
 	getHidePositionValue: =>
-		positionValue = (if @isInverse() then @getSizeValue()*-1 else @getSizeValue())+'px'
+		positionValue = @getSizeValue()
+		positionValue *= -1  if @isInverse()
+		positionValue += 'px'
 		return positionValue
 
 	# Get Desired Position Value
@@ -472,7 +477,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 			# $wrap.css(@getShowPositionStyles())
 			$wrap.css(@getHidePositionStyles())
 			$wrap.prop(@getShowAxisProperties())
-			$wrap.addClass(@config.wrapVisibleClass)
 		else
 			# @enable(null, {alterClass:false})
 			@disable()
@@ -481,7 +485,11 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# animateOpts = @getShowAxisProperties()
 		animateOpts = @getShowPositionStyles()
 		$wrap.stop(true,false).animate animateOpts, 400, =>
-			@enable()
+			$wrap.addClass(@config.wrapVisibleClass)
+			if @isTouchDevice()
+				@disable()
+			else
+				@enable()
 			$(window).trigger('resize')
 			@$getEl().trigger('slidescrollpanelin')
 			return next?()
@@ -508,11 +516,23 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# @enable(null, {alterClass:false})
 		@disable()
 
-		# Animate
+		# Prepare Animation
 		# animateOpts = @getHideAxisProperties()
 		animateOpts = @getHidePositionStyles()
+
+		# Keep visible by
+		if @config.keepVisibleBy
+			positionProperty = @getPositionProperty()
+			positionValue = parseInt(animateOpts[positionProperty], 10)
+			keepVisibleBy = parseFloat(@config.keepVisibleBy, 10)
+			keepVisibleBy *= @getSizeValue()  if keepVisibleBy < 1  # support percentages
+			newPositionValue = if @isInverse() then (positionValue + keepVisibleBy) else (positionValue - keepVisibleBy)
+			newPositionValue += 'px'
+			animateOpts[positionProperty] = newPositionValue
+
+		# Animate
 		$wrap.stop(true,false).animate animateOpts, 400, =>
-			$wrap.removeClass(@config.wrapVisibleClass)
+			$wrap.removeClass(@config.wrapVisibleClass)  unless @config.keepVisibleBy
 			$(window).trigger('resize')
 			@$getEl().trigger('slidescrollpanelout')
 			return next?()
@@ -580,6 +600,13 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Log
 		@log 'disableHelper'
 
+		# Check if we were clicked outside
+		if event.type is 'click'
+			$target = $(event.originalEvent.target)
+			has = @$getContent().has($target).length isnt 0
+			if has
+				return @
+
 		# Kill Android Hack
 		$(document.body).off('click', @disableHelper)
 
@@ -621,10 +648,10 @@ $.SlideScrollPanel = class SlideScrollPanel
 			@leavePanelHelperTimer = null
 
 		# No point in enabling if we are already active
-		return @  if @isActive()
+		return @  if @isInvisible() or @isActive()
 
 		# Log
-		@log 'enterPanelHelper', @isActive()
+		@log 'enterPanelHelper', @isVisible(), @isActive()
 
 		# Handle
 		@enableHelper(event)
@@ -636,10 +663,10 @@ $.SlideScrollPanel = class SlideScrollPanel
 	leavePanelHelperTimer: null
 	leavePanelHelper: (event,opts={}) =>
 		# No point in enabling if we are already inactive
-		return @  if @isInactive()
+		return @  if @isInvisible() or @isInactive()
 
 		# Log
-		@log 'leavePanelHelper', @isActive()
+		@log 'leavePanelHelper', @isVisible(), @isActive()
 
 		# Touch devices we can fire disable right away
 		if @isTouchDevice()
