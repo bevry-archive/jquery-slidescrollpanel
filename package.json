@@ -1,6 +1,6 @@
 {
 	"name": "jquery-slidescrollpanel",
-	"version": "1.4.0",
+	"version": "1.5.0",
 	"description": "Create sliding scroll panels that slide in by touch, trackpad and scrolling",
 	"title": "jQuery Slide Scroll Panel",
 	"tagline": "Slide panels in by touch and scrolling",

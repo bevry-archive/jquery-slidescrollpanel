@@ -1,5 +1,9 @@
 ## History
 
+- v1.5.0 July 5, 2013
+	- Added `keepVisibleBy` option
+	- We now animate the position rather than the axis
+
 - v1.4.0 July 4, 2013
 	- Added `autoShowAbove` and `autoHideBelow` properties
 
