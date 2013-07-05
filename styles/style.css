@@ -1,0 +1,10 @@
+@import url("../vendor/yui-cssreset.css");
+@import url("./generic.css");
+.demo a{cursor:pointer;color:#00f;display:block;margin-bottom:5px;}
+.demo a:hover{text-decoration:underline}
+.demo .demo-box{width:100%;height:300px;overflow:hidden;border:5px ridge #eee;position:relative;margin:0;padding:0;text-align:center;}
+.demo .demo-box .slidescrollpanel-wrap{background:rgba(255,0,0,0.05);border:1px solid #f00}
+.demo .demo-box .slidescrollpanel-content{text-align:left;border:1px solid #000;background:#eee;position:relative;}
+.demo .demo-box .slidescrollpanel-content pre > code{overflow:hidden}
+.demo .demo-box .demo-buttons{margin-top:100px;}
+.demo .demo-box .demo-buttons button{margin:.5em;width:150px;max-width:40%}
