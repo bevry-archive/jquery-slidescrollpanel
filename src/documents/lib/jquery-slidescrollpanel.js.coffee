@@ -51,6 +51,9 @@ $.SlideScrollPanel = class SlideScrollPanel
 		# Keep Visible By
 		keepVisibleBy: false
 
+		# Force the wrapper to be position by this property instead of the default
+		forcedPositionProperty: false
+
 		# Styles to apply to the wrap
 		wrapStyles:
 			margin: 0
@@ -272,9 +275,13 @@ $.SlideScrollPanel = class SlideScrollPanel
 
 	# Get Position Property
 	getPositionProperty: =>
-		direction = @getDirection()
-		positionProperty = @positionPropertyMap[direction]
+		positionProperty = @config.forcedPositionProperty or @positionPropertyMap[@getDirection()]
 		return positionProperty
+
+	# Is Position Inverted
+	isPositionInverted: =>
+		positionInverted = @config.forcedPositionProperty and @config.forcedPositionProperty isnt @positionPropertyMap[@getDirection()]
+		return positionInverted
 
 	# Get Position Value
 	getPositionValue: =>
@@ -288,16 +295,24 @@ $.SlideScrollPanel = class SlideScrollPanel
 		return positionValue
 
 	# Get Hide Position Value
-	getHidePositionValue: =>
+	getHidePositionValue: (invertCheck=true) =>
 		positionValue = @getSizeValue()
 		positionValue *= -1  if @isInverse()
+		positionValue *= -1  if invertCheck and @isPositionInverted()
 		positionValue += 'px'
 		return positionValue
 
 	# Get Desired Position Value
 	getDesiredPositionValue: =>
-		positionValue = (@getShowAxisValue()-@getAxisValue())+'px'
+		positionValue = (@getShowAxisValue()-@getAxisValue())
+		positionValue *= -1  if @isPositionInverted()
+		positionValue += 'px'
 		return positionValue
+
+	# Get Position Percent
+	getPositionPercent: =>
+		percentVisible = 1 - parseInt(@getPositionValue(), 10) / parseInt(@getHidePositionValue(false), 10)
+		return percentVisible
 
 	# Get Position Styles
 	getPositionStyles: =>
@@ -320,13 +335,8 @@ $.SlideScrollPanel = class SlideScrollPanel
 	# Get Desired Position Styles
 	getDesiredPositionStyles: =>
 		opts = {}
-		opts[@getPositionProperty()] = (@getShowAxisValue()-@getAxisValue())+'px'
+		opts[@getPositionProperty()] = @getDesiredPositionValue()
 		return opts
-
-	# Get Position Percent
-	getPositionPercent: =>
-		percentVisible = 1 - parseInt(@getPositionValue(), 10) / parseInt(@getHidePositionValue(), 10)
-		return percentVisible
 
 
 	# ---------------------------------
@@ -366,8 +376,19 @@ $.SlideScrollPanel = class SlideScrollPanel
 		if @isInverse()
 			axisValue = parseInt(@getShowPositionValue(), 10) - parseInt(@getPositionValue(), 10)
 		else
-			axisValue = parseInt(@getHidePositionValue(), 10) - parseInt(@getPositionValue(), 10)
+			if @isPositionInverted()
+				axisValue = parseInt(@getPositionValue(), 10) - parseInt(@getHidePositionValue(), 10)
+			else
+				axisValue = parseInt(@getHidePositionValue(), 10) - parseInt(@getPositionValue(), 10)
 		return axisValue
+
+	# Get Axis Percent
+	getAxisPercent: =>
+		if @isInverse()
+			percentVisible = 1 - @getAxisValue() / @getHideAxisValue()
+		else
+			percentVisible = @getAxisValue() / @getShowAxisValue()
+		return percentVisible
 
 	# Get Axis Properties
 	getAxisProperties: =>
@@ -392,14 +413,6 @@ $.SlideScrollPanel = class SlideScrollPanel
 		opts = {}
 		opts[@getAxisProperty()] = @getDesiredAxisValue()
 		return opts
-
-	# Get Axis Percent
-	getAxisPercent: =>
-		if @isInverse()
-			percentVisible = 1 - @getAxisValue() / @getHideAxisValue()
-		else
-			percentVisible = @getAxisValue() / @getShowAxisValue()
-		return percentVisible
 
 
 	# ---------------------------------

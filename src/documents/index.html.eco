@@ -109,6 +109,9 @@ urls: ['/demo/']
 		# Keep Visible By
 		keepVisibleBy: false
 
+		# Force the wrapper to be position by this property instead of the default
+		forcedPositionProperty: false
+
 		# Styles to apply to the wrap
 		wrapStyles:
 			margin: 0

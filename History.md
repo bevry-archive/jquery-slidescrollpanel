@@ -1,5 +1,8 @@
 ## History
 
+- v1.5.1 July 5, 2013
+	- Added `forcedPositionProperty`
+
 - v1.5.0 July 5, 2013
 	- Added `keepVisibleBy` option
 	- We now animate the position rather than the axis
