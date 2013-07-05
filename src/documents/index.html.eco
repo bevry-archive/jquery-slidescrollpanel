@@ -91,12 +91,23 @@ urls: ['/demo/']
 		# Should we auto set the wrap's height?
 		autoWrapHeight: true
 
-		# Styles to apply to the panel
-		contentStyles:
-			margin: 0
-			padding: 0
-			width: '100%'
-			display: 'inline-block'
+		# How long should we wait on desktop devices for the user to scroll again
+		disableDelay: 1*1000
+
+		# The classname to apply to the wrapper when the panel is active
+		wrapActiveClass: 'slidescrollpanel-active'
+
+		# The classname to apply to the wrapper when the panel is visible
+		wrapVisibleClass: 'slidescrollpanel-visible'
+
+		# Auto Show Above Percentage
+		autoShowAbove: 0.7
+
+		# Auto Hide Below Percentage
+		autoHideBelow: 0.3
+
+		# Keep Visible By
+		keepVisibleBy: false
 
 		# Styles to apply to the wrap
 		wrapStyles:
@@ -107,6 +118,13 @@ urls: ['/demo/']
 			left: 0
 			overflow: 'auto'
 			'z-index': 100
+
+		# Styles to apply to the panel
+		contentStyles:
+			margin: 0
+			padding: 0
+			width: '100%'
+			display: 'inline-block'
 
 	</code></pre>
 
